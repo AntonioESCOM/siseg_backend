@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const { sendEmail } = require('../helpers/general_helper');
 const { verifyTokenWithErrorHandling } = require('../helpers/general_helper');
+const { upload } = require('../helpers/general_helper');
 const fs = require('fs').promises;
 
 const actions = {}
@@ -17,7 +18,9 @@ actions.loginUser = async (req, res) => {
     try {
         const user = await prisma.Persona.findUnique({ where: { boleta } }); 
         if (user && user.contrasena ==password ) {
-            const token = jwt.sign({ id: user.boleta, username: user.nobre},process.env.SECRET_KEY, {
+            console.log(user.nombre);
+            
+            const token = jwt.sign({ id: user.boleta, username: user.nombre, rol:user.rol},process.env.SECRET_KEY, {
                 expiresIn: '1h' 
             });
           res.json({ error: 0, message: "Inicio de sesión exitoso", token });
@@ -188,5 +191,120 @@ actions.completarRegistro =async (req,res) =>{
     }
   }
 }
+
+actions.modificarDatos= async (req,res) =>{
+  const {tk,calle,colonia,delegacion,estado,cp,sexo,telcelular,tellocal}=req.body;
+  try {
+    if(calle,colonia,delegacion,estado,cp,sexo,telcelular,tellocal,tk){
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      await prisma.Persona.update({ where: { boleta: payload.id }, data: {sexo:sexo,telefonoMovil:telcelular,telefonoFijo:tellocal} });
+      await prisma.Direccion.update({  where: { boleta: payload.id }, data: {calle:calle,colonia:colonia,delegacionMunicipio:delegacion,cp:cp,estado:estado} });
+      res.json({ error: 0, message: "Se ha completado el registro"});
+    }else{
+      res.json({ error: 1, message: "Faltan parametros en la petición" });
+    }
+  } catch (error) {
+    console.log(error);
+    if (error.message === 'TOKEN_EXPIRED') {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === 'INVALID_TOKEN') {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
+  }
+}
+
+actions.obtenerTodosDatosAlumno= async(req,res)=>{
+   const {tk} = req.query;
+    try {
+    if(tk){
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const user = await prisma.Persona.findUnique({ where: { boleta:payload.id } ,  include: {alumno: true} }); 
+      const carrera = await prisma.CARRERA.findUnique({where:{ ID:user.alumno.carrera}});
+      const direccion= await prisma.Direccion.findUnique({where:{ alumnoBoleta:payload.id}});
+      if (user) {
+          const data= {
+            boleta:user.boleta, 
+            correo: user.correo,
+            curp:user.curp,
+            nombre:user.nombre,
+            apellido_paterno:user.APELLIDO_PATERNO,
+            apellido_materno:user.APELLIDO_MATERNO,
+            generacion:user.alumno.generacion,
+            promedio:user.alumno.promedio,
+            carrera:carrera.NOMBRE,
+            calle_y_numero:direccion.calle,
+            colonia:direccion.colonia,
+            delegacion:direccion.delegacion,
+            estado:direccion.estado,
+            cp:direccion.cp,
+            sexo:user.sexo,
+            telcelular:user.telefonoMovil,
+            tellocal:user.telefonoFijo
+          };
+          res.json({ error: 0, message: "Datos",data });
+      } else {
+          res.json({ error: 1, message: "Usuario no encontrado" });
+      }
+    }else{
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ error: 1, message: "Token expirado" });
+  }
+}
+
+actions.expedienteDigital = async(req,res)=>{
+  const {tk} = req.query;
+  try {
+    if(tk){
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const documents = await prisma.Expediente.findMany({where:{ alumnoBoleta:payload.id}});
+      res.json({ error: 0, message: "Datos",documents });
+    }else{
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    if (error.message === 'TOKEN_EXPIRED') {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === 'INVALID_TOKEN') {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
+  }
+}
+
+actions.subirArchivo = async (req, res) => {
+  // Verificar si el token está presente
+  const { tk } = req.query;
+  if (!tk) {
+    return res.status(400).send({ message: 'Token requerido' });
+  }
+
+  upload.single('file')(req, res, async (err) => {
+    if (err) {
+      return res.status(500).send({ error: 'Error al subir el archivo', details: err.message });
+    }
+
+    try {
+      if (!req.file) {
+        return res.status(400).send({ message: 'No se ha enviado ningún archivo' });
+      }
+
+      // Si el archivo se sube correctamente, respondemos con los detalles
+      res.status(200).send({
+        message: 'Archivo subido exitosamente',
+        file: req.file
+      });
+    } catch (error) {
+      res.status(500).send({ error: 'Error procesando el archivo', details: error.message });
+    }
+  });
+}
+
 
 module.exports = actions

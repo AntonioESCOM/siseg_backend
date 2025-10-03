@@ -1,6 +1,9 @@
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 let cachedTransporter;
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 /**
  * Crea/recupera un transporter único (evita recrearlo en hot-reload).
@@ -66,4 +69,34 @@ const verifyTokenWithErrorHandling = (token, secretKey) => {
     }
   }
 };
-module.exports = { getTransporter, sendEmail,verifyTokenWithErrorHandling };
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // Verifica si el token es válido antes de guardar el archivo
+    const { tk } = req.query;
+    if (tk) {
+      try {
+        const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+        const userDir = path.join(__dirname, '../uploads', payload.id.toString()); // Usa el id del payload como nombre de la carpeta
+
+        // Si la carpeta no existe, créala
+        if (!fs.existsSync(userDir)) {
+          fs.mkdirSync(userDir, { recursive: true });
+        }
+
+        cb(null, userDir); // Establece la carpeta como destino
+      } catch (error) {
+        cb(error);
+      }
+    } else {
+      cb(new Error('Token requerido'));
+    }
+  },
+  filename: (req, file, cb) => {
+    // Establecer el nombre del archivo con el nombre original del archivo
+    cb(null, file.originalname); // Guarda el archivo con su nombre original
+  }
+});
+const upload = multer({ storage: storage });
+
+module.exports = { getTransporter, sendEmail,verifyTokenWithErrorHandling,upload };
