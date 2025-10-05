@@ -69,22 +69,17 @@ const verifyTokenWithErrorHandling = (token, secretKey) => {
     }
   }
 };
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Verifica si el token es válido antes de guardar el archivo
-    const { tk } = req.query;
+    const { tk,nombre} = req.query;
     if (tk) {
       try {
         const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
-        const userDir = path.join(__dirname, '../uploads', payload.id.toString()); // Usa el id del payload como nombre de la carpeta
-
-        // Si la carpeta no existe, créala
+        const userDir = path.join(__dirname, '../uploads', payload.id.toString()); 
         if (!fs.existsSync(userDir)) {
           fs.mkdirSync(userDir, { recursive: true });
         }
-
-        cb(null, userDir); // Establece la carpeta como destino
+        cb(null, userDir); 
       } catch (error) {
         cb(error);
       }
@@ -93,8 +88,11 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
-    // Establecer el nombre del archivo con el nombre original del archivo
-    cb(null, file.originalname); // Guarda el archivo con su nombre original
+    const { tk,nombre } = req.query; 
+    if (nombre) {
+      const ext = path.extname(file.originalname);
+      cb(null, nombre + ext);
+    } 
   }
 });
 const upload = multer({ storage: storage });

@@ -3,13 +3,13 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const session = require('express-session');
 const multer = require('multer');
+const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 
 const app = express();
 app.set('trust proxy', 1);
-
-// Middleware para CORS
+const uploadsDir = path.join(__dirname, 'uploads'); 
 app.use(cors({
   origin: ['http://localhost:8081', 'http://localhost:3000'], // Especifica el dominio permitido
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos HTTP permitidos
@@ -25,7 +25,7 @@ app.use(session({
 }));
 app.use(bodyParser.json());
 
-
+app.use('/uploads', express.static(uploadsDir)); 
 
 const users = require('./routers/user.router');
 app.use('/api/users',users);

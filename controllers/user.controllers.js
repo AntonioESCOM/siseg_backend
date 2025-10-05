@@ -18,8 +18,6 @@ actions.loginUser = async (req, res) => {
     try {
         const user = await prisma.Persona.findUnique({ where: { boleta } }); 
         if (user && user.contrasena ==password ) {
-            console.log(user.nombre);
-            
             const token = jwt.sign({ id: user.boleta, username: user.nombre, rol:user.rol},process.env.SECRET_KEY, {
                 expiresIn: '1h' 
             });
@@ -279,23 +277,18 @@ actions.expedienteDigital = async(req,res)=>{
 }
 
 actions.subirArchivo = async (req, res) => {
-  // Verificar si el token está presente
-  const { tk } = req.query;
+  const {tk,nombre} = req.query;
   if (!tk) {
     return res.status(400).send({ message: 'Token requerido' });
   }
-
   upload.single('file')(req, res, async (err) => {
     if (err) {
       return res.status(500).send({ error: 'Error al subir el archivo', details: err.message });
     }
-
     try {
       if (!req.file) {
         return res.status(400).send({ message: 'No se ha enviado ningún archivo' });
       }
-
-      // Si el archivo se sube correctamente, respondemos con los detalles
       res.status(200).send({
         message: 'Archivo subido exitosamente',
         file: req.file
@@ -304,6 +297,38 @@ actions.subirArchivo = async (req, res) => {
       res.status(500).send({ error: 'Error procesando el archivo', details: error.message });
     }
   });
+}
+
+actions.obtenerTodosDatosAdmin= async(req,res)=>{
+   const {tk} = req.query;
+    try {
+    if(tk){
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const user = await prisma.Persona.findUnique({ where: { boleta:payload.id } ,  include: {pAdmin: true} }); 
+      if (user) {
+          const data= {
+            numempleado:user.boleta, 
+            correo: user.correo,
+            curp:user.curp,
+            nombre:user.nombre,
+            apellido_paterno:user.APELLIDO_PATERNO,
+            apellido_materno:user.APELLIDO_MATERNO,
+            perfil:user.pAdmin.perfil,
+            telcelular:user.telefonoMovil,
+            tellocal:user.telefonoFijo
+
+          };
+          res.json({ error: 0, message: "Datos",data });
+      } else {
+          res.json({ error: 1, message: "Usuario no encontrado" });
+      }
+    }else{
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ error: 1, message: "Token expirado" });
+  }
 }
 
 

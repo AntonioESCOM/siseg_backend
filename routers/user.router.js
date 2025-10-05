@@ -13,5 +13,6 @@ router.post('/modificarDatos', actionsUser.modificarDatos);
 router.get('/obtenerTodosDatosAlumno', actionsUser.obtenerTodosDatosAlumno);
 router.get('/expedienteDigital', actionsUser.expedienteDigital);
 router.post('/subirArchivo',actionsUser.subirArchivo);
+router.get('/obtenerTodosDatosAdmin', actionsUser.obtenerTodosDatosAdmin);
 
 module.exports = router
