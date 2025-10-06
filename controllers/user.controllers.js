@@ -8,6 +8,7 @@ const { sendEmail } = require('../helpers/general_helper');
 const { verifyTokenWithErrorHandling } = require('../helpers/general_helper');
 const { upload } = require('../helpers/general_helper');
 const fs = require('fs').promises;
+const path = require('path');
 
 const actions = {}
 
@@ -115,7 +116,6 @@ actions.restablecerPassword = async (req, res) => {
   try {
     if(tk){
       const payload =verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
-      console.log(payload.id,password);
       await prisma.Persona.update({ where: { boleta: payload.id }, data: {contrasena:password} })
       res.json({ error: 0, message: "Se ha restablecido la contraseña"});
     }else{
@@ -173,7 +173,7 @@ actions.completarRegistro =async (req,res) =>{
       await prisma.Persona.update({ where: { boleta: payload.id }, data: {sexo:sexo,telefonoMovil:telcelular,telefonoFijo:tellocal} });
       await prisma.Alumno.update({ where: { boleta: payload.id }, data: {rfc:rfc} });
       if( !await prisma.Direccion.findUnique({ where: { alumnoBoleta:payload.id }}))
-        await prisma.Direccion.create({  data: {alumnoBoleta:payload.id,calle:calle,colonia:colonia,delegacionMunicipio:delegacion,cp:cp,estado:estado} });
+          await prisma.Direccion.create({  data: {alumnoBoleta:payload.id,calle:calle,colonia:colonia,delegacionMunicipio:delegacion,cp:cp,estado:estado} });
       res.json({ error: 0, message: "Se ha completado el registro"});
     }else{
       res.json({ error: 1, message: "Faltan parametros en la petición" });
@@ -226,6 +226,7 @@ actions.obtenerTodosDatosAlumno= async(req,res)=>{
             boleta:user.boleta, 
             correo: user.correo,
             curp:user.curp,
+            rfc:user.alumno.rfc,
             nombre:user.nombre,
             apellido_paterno:user.APELLIDO_PATERNO,
             apellido_materno:user.APELLIDO_MATERNO,
@@ -234,7 +235,7 @@ actions.obtenerTodosDatosAlumno= async(req,res)=>{
             carrera:carrera.NOMBRE,
             calle_y_numero:direccion.calle,
             colonia:direccion.colonia,
-            delegacion:direccion.delegacion,
+            delegacion:direccion.delegacionMunicipio,
             estado:direccion.estado,
             cp:direccion.cp,
             sexo:user.sexo,
@@ -277,27 +278,74 @@ actions.expedienteDigital = async(req,res)=>{
 }
 
 actions.subirArchivo = async (req, res) => {
-  const {tk,nombre} = req.query;
+  const { tk, nombre } = req.query;
   if (!tk) {
     return res.status(400).send({ message: 'Token requerido' });
   }
+
+  const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+
   upload.single('file')(req, res, async (err) => {
     if (err) {
       return res.status(500).send({ error: 'Error al subir el archivo', details: err.message });
     }
+
     try {
       if (!req.file) {
         return res.status(400).send({ message: 'No se ha enviado ningún archivo' });
       }
-      res.status(200).send({
-        message: 'Archivo subido exitosamente',
-        file: req.file
+
+      // Nombre lógico para identificar el documento (el que tú quieras usar como “clave” junto con alumnoBoleta)
+      const nombreLogico = (nombre?.trim?.() || req.file.originalname).trim();
+
+      // Ruta real según cómo lo guardó Multer en el servidor
+      const ruta = `${process.env.BASE_URL}/uploads/${payload.id}/${req.file.filename}`;
+
+      // 1) Buscar si ya existe un expediente con el mismo alumnoBoleta + nombreArchivo
+      const existente = await prisma.expediente.findFirst({
+        where: {
+          alumnoBoleta: payload.id,
+          nombreArchivo: nombreLogico,
+        },
       });
+
+      let expediente;
+      let message;
+
+      if (existente) {
+        expediente = await prisma.expediente.update({
+          where: { ID: existente.ID },
+          data: {
+            estatus: 2,
+            rutaArchivo: ruta,
+          },
+        });
+        message = 'Archivo actualizado exitosamente';
+      } else {
+        expediente = await prisma.expediente.create({
+          data: {
+            alumnoBoleta: payload.id,
+            fechaRegistro: new Date(),         
+            nombreArchivo: nombreLogico,       
+            estatus: 2,
+            rutaArchivo: ruta,                 
+          },
+        });
+        message = 'Archivo creado exitosamente';
+      }
+
+      return res.status(200).send({
+        message,
+        file: req.file,
+        expediente,
+      });
+
     } catch (error) {
-      res.status(500).send({ error: 'Error procesando el archivo', details: error.message });
+      return res.status(500).send({ error: 'Error procesando el archivo', details: error.message });
     }
   });
-}
+};
+
 
 actions.obtenerTodosDatosAdmin= async(req,res)=>{
    const {tk} = req.query;
