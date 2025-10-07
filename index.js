@@ -28,7 +28,9 @@ app.use(bodyParser.json());
 app.use('/uploads', express.static(uploadsDir)); 
 
 const users = require('./routers/user.router');
+const plaza = require('./routers/plaza.router');
 app.use('/api/users',users);
+app.use('/api/plaza',plaza);
 
 app.get("/api", (req, res) => {
   res.json({ message: "Hola desde el servidor!" });
