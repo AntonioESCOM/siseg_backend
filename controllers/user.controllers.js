@@ -288,7 +288,7 @@ actions.modificarDatos = async (req, res) => {
         data: { sexo: sexo, telefonoMovil: telcelular, telefonoFijo: tellocal },
       });
       await prisma.Direccion.update({
-        where: { boleta: payload.id },
+        where: { alumnoBoleta: payload.id },
         data: {
           calle: calle,
           colonia: colonia,
@@ -493,6 +493,31 @@ actions.obtenerTodosDatosAdmin = async (req, res) => {
     res.json({ error: 1, message: "Token expirado" });
   }
 };
+
+actions.obtenerPlazaAsignada = async (req, res) => {
+  const { tk } = req.query;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const alumno = await prisma.Alumno.findUnique({
+        where: { boleta: payload.id }
+      });
+      if (alumno) {
+        const plaza = await prisma.Plaza.findUnique({where: { ID: alumno.sede }});
+        res.json({ error: 0, message: "Datos", plaza });
+      } else {
+        res.json({ error: 1, message: "Usuario no encontrado" });
+      }
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ error: 1, message: "Token expirado" });
+  }
+};
+
+
 
 
 
