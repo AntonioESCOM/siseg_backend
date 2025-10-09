@@ -30,9 +30,11 @@ app.use('/uploads', express.static(uploadsDir));
 const users = require('./routers/user.router');
 const plaza = require('./routers/plaza.router');
 const qr = require('./routers/qr.router');
+const reportes = require('./routers/reportes.router');
 app.use('/api/users',users);
 app.use('/api/plaza',plaza);
 app.use('/api/qr',qr);
+app.use('/api/reportes',reportes);
 
 app.get("/api", (req, res) => {
   res.json({ message: "Hola desde el servidor!" });

@@ -199,11 +199,6 @@ model ESTATUS_P_ADMIN {
   P_ADMIN     PAdmin[]
 }
 
-model ESTATUS_QR {
-  ID          Int     @id
-  DESCRIPCION String? @db.VarChar(20)
-}
-
 enum Rol {
   ALUMNO
   P_ADMIN
