@@ -54,9 +54,9 @@ model Alumno {
   sede                            Int?            @map("SEDE")
   promedio                        Decimal?        @map("PROMEDIO") @db.Decimal(4, 2)
   rfc                             String?         @unique(map: "RFC") @map("RFC") @db.VarChar(13)
-  persona                         Persona         @relation(fields: [boleta], references: [boleta], onUpdate: Restrict, map: "ALUMNO_ibfk_1")
+  persona                         Persona         @relation(fields: [boleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "ALUMNO_ibfk_1")
   plaza                           Plaza?          @relation(fields: [sede], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "ALUMNO_ibfk_2")
-  CARRERA_ALUMNO_CARRERAToCARRERA CARRERA?        @relation("ALUMNO_CARRERAToCARRERA", fields: [carrera], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ALUMNO_ibfk_3")
+  CARRERA_ALUMNO_CARRERAToCARRERA CARRERA?        @relation("ALUMNO_CARRERAToCARRERA", fields: [carrera], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "ALUMNO_ibfk_3")
   ESTATUS_ALUMNO                  ESTATUS_ALUMNO? @relation(fields: [estatus], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "ALUMNO_ibfk_4")
   codigosQr                       CodigoQr[]
   direccion                       Direccion?
@@ -78,22 +78,23 @@ model Direccion {
   cp                  String? @map("CP") @db.VarChar(5)
   delegacionMunicipio String? @map("DELEGACION_MUNICIPIO") @db.VarChar(30)
   estado              String? @map("ESTADO") @db.VarChar(30)
-  alumno              Alumno  @relation(fields: [alumnoBoleta], references: [boleta], onUpdate: Restrict, map: "DIRECCION_ibfk_1")
+  alumno              Alumno  @relation(fields: [alumnoBoleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "DIRECCION_ibfk_1")
 
   @@map("DIRECCION")
 }
 
 /// ========== P_ADMIN ==========
 model PAdmin {
-  boleta          String           @id @map("BOLETA") @db.VarChar(12)
-  estatus         Int?             @map("ESTATUS")
-  perfil          Int?             @map("PERFIL")
-  codigosQr       CodigoQr[]
-  encuestas       Encuesta[]
-  expedientes     Expediente[]
-  persona         Persona          @relation(fields: [boleta], references: [boleta], onUpdate: Restrict, map: "P_ADMIN_ibfk_1")
-  ESTATUS_P_ADMIN ESTATUS_P_ADMIN? @relation(fields: [estatus], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "P_ADMIN_ibfk_2")
-  reportes        Reporte[]
+  boleta              String                @id @map("BOLETA") @db.VarChar(12)
+  estatus             Int?                  @map("ESTATUS")
+  perfil              Int?                  @map("PERFIL")
+  codigosQr           CodigoQr[]
+  encuestas           Encuesta[]
+  expedientes         Expediente[]
+  persona             Persona               @relation(fields: [boleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "P_ADMIN_ibfk_1")
+  ESTATUS_P_ADMIN     ESTATUS_P_ADMIN?      @relation(fields: [estatus], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "P_ADMIN_ibfk_2")
+  reportes            Reporte[]
+  REPORTE_OBSERVACION REPORTE_OBSERVACION[]
 
   @@index([estatus], map: "P_ADMIN_ibfk_2_idx")
   @@map("P_ADMIN")
@@ -105,7 +106,7 @@ model Bitacora {
   accion         String?   @map("ACCION") @db.VarChar(40)
   boletaPersona  String?   @map("BOLETA") @db.VarChar(12)
   fechaEjecucion DateTime? @map("FECHA_EJECUCION") @db.DateTime(0)
-  persona        Persona?  @relation(fields: [boletaPersona], references: [boleta], onDelete: Restrict, onUpdate: Restrict, map: "BITACORA_ibfk_1")
+  persona        Persona?  @relation(fields: [boletaPersona], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "BITACORA_ibfk_1")
 
   @@index([boletaPersona], map: "BOLETA")
   @@map("BITACORA")
@@ -118,8 +119,8 @@ model CodigoQr {
   alumnoBoleta   String?   @map("ALUMNO") @db.VarChar(12)
   fechaLectura   DateTime? @map("FECHA_LECTURA") @db.DateTime(0)
   qr             String?   @map("QR") @db.VarChar(255)
-  alumno         Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: Restrict, onUpdate: Restrict, map: "CODIGO_QR_ibfk_1")
-  admin          PAdmin?   @relation(fields: [adminEncargado], references: [boleta], onDelete: Restrict, onUpdate: Restrict, map: "CODIGO_QR_ibfk_2")
+  alumno         Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "CODIGO_QR_ibfk_1")
+  admin          PAdmin?   @relation(fields: [adminEncargado], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "CODIGO_QR_ibfk_2")
 
   @@index([adminEncargado], map: "ADMIN_ENCARGADO")
   @@index([alumnoBoleta], map: "ALUMNO")
@@ -128,18 +129,18 @@ model CodigoQr {
 
 /// ========== REPORTE ==========
 model Reporte {
-  id                Int       @id @default(autoincrement()) @map("ID")
-  adminEncargado    String?   @map("ADMIN_ENCARGADO") @db.VarChar(12)
-  alumnoBoleta      String?   @map("ALUMNO") @db.VarChar(12)
-  descripcion       String?   @map("DESCRIPCION") @db.VarChar(255)
-  evidencia         String?   @map("EVIDENCIA") @db.VarChar(50)
-  estatus           Int?      @map("ESTATUS")
-  fechaRegistro     DateTime? @map("FECHA_REGISTRO") @db.DateTime(0)
-  fechaModificacion DateTime? @map("FECHA_MODIFICACION") @db.DateTime(0)
-  fechaFinalizado   DateTime? @map("FECHA_FINALIZADO") @db.DateTime(0)
-  observacion       String?   @map("OBSERVACION") @db.VarChar(255)
-  alumno            Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: Restrict, onUpdate: Restrict, map: "REPORTE_ibfk_1")
-  admin             PAdmin?   @relation(fields: [adminEncargado], references: [boleta], onDelete: Restrict, onUpdate: Restrict, map: "REPORTE_ibfk_2")
+  id                  Int                   @id @default(autoincrement()) @map("ID")
+  adminEncargado      String?               @map("ADMIN_ENCARGADO") @db.VarChar(12)
+  alumnoBoleta        String?               @map("ALUMNO") @db.VarChar(12)
+  descripcion         String?               @map("DESCRIPCION") @db.VarChar(255)
+  estatus             Int?                  @map("ESTATUS")
+  fechaRegistro       DateTime?             @default(now()) @map("FECHA_REGISTRO") @db.DateTime(0)
+  fechaModificacion   DateTime?             @map("FECHA_MODIFICACION") @db.DateTime(0)
+  fechaFinalizado     DateTime?             @map("FECHA_FINALIZADO") @db.DateTime(0)
+  alumno              Alumno?               @relation(fields: [alumnoBoleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "REPORTE_ibfk_1")
+  admin               PAdmin?               @relation(fields: [adminEncargado], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "REPORTE_ibfk_2")
+  REPORTE_EVIDENCIA   REPORTE_EVIDENCIA[]
+  REPORTE_OBSERVACION REPORTE_OBSERVACION[]
 
   @@index([adminEncargado], map: "ADMIN_ENCARGADO")
   @@index([alumnoBoleta], map: "ALUMNO")
@@ -154,8 +155,8 @@ model Encuesta {
   fechaRegistro  DateTime? @map("FECHA_REGISTRO") @db.DateTime(0)
   pregunta       Int?      @map("PREGUNTA")
   respuesta      Int?      @map("RESPUESTA")
-  alumno         Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: Restrict, onUpdate: Restrict, map: "ENCUESTA_ibfk_1")
-  admin          PAdmin?   @relation(fields: [adminEncargado], references: [boleta], onDelete: Restrict, onUpdate: Restrict, map: "ENCUESTA_ibfk_2")
+  alumno         Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "ENCUESTA_ibfk_1")
+  admin          PAdmin?   @relation(fields: [adminEncargado], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "ENCUESTA_ibfk_2")
 
   @@index([adminEncargado], map: "ADMIN_ENCARGADO")
   @@index([alumnoBoleta], map: "ALUMNO")
@@ -169,11 +170,11 @@ model Expediente {
   adminEncargado String?   @map("ADMIN_ENCARGADO") @db.VarChar(12)
   estatus        Int?      @map("ESTATUS")
   fechaRegistro  DateTime? @map("FECHA_REGISTRO") @db.DateTime(0)
-  nombreArchivo  String?   @map("NOMBRE_ARCHIVO") @db.VarChar(30)
+  nombreArchivo  String?   @map("NOMBRE_ARCHIVO") @db.VarChar(50)
   observacion    String?   @map("OBSERVACION") @db.VarChar(100)
-  rutaArchivo    String?   @map("RUTA_ARCHIVO") @db.VarChar(100)
-  alumno         Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: Restrict, onUpdate: Restrict, map: "EXPEDIENTE_ibfk_1")
-  admin          PAdmin?   @relation(fields: [adminEncargado], references: [boleta], onDelete: Restrict, onUpdate: Restrict, map: "EXPEDIENTE_ibfk_2")
+  rutaArchivo    String?   @map("RUTA_ARCHIVO") @db.VarChar(255)
+  alumno         Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "EXPEDIENTE_ibfk_1")
+  admin          PAdmin?   @relation(fields: [adminEncargado], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "EXPEDIENTE_ibfk_2")
 
   @@index([adminEncargado], map: "ADMIN_ENCARGADO")
   @@index([alumnoBoleta], map: "ALUMNO")
@@ -197,6 +198,28 @@ model ESTATUS_P_ADMIN {
   ID          Int      @id
   DESCRIPCION String?  @db.VarChar(20)
   P_ADMIN     PAdmin[]
+}
+
+model REPORTE_EVIDENCIA {
+  ID          BigInt  @id @default(autoincrement())
+  REPORTE_ID  Int
+  URL_ARCHIVO String  @db.VarChar(2048)
+  REPORTE     Reporte @relation(fields: [REPORTE_ID], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "REPORTE_EVIDENCIA_ibfk_1")
+
+  @@index([REPORTE_ID], map: "REPORTE_ID")
+}
+
+model REPORTE_OBSERVACION {
+  ID             BigInt    @id @default(autoincrement())
+  REPORTE_ID     Int       @map("  REPORTE_ID")
+  DESCRIPCION    String?   @db.VarChar(500)
+  FECHA_DATETIME DateTime? @default(now()) @map(" FECHA DATETIME") @db.DateTime(0)
+  AUTOR_ADMIN    String    @db.VarChar(12)
+  P_ADMIN        PAdmin    @relation(fields: [AUTOR_ADMIN], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "AUTOR_ADMIN")
+  REPORTE        Reporte   @relation(fields: [REPORTE_ID], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "REPORTE_ID")
+
+  @@index([AUTOR_ADMIN], map: "AUTOR_ADMIN_idx")
+  @@index([REPORTE_ID], map: "REPORTE_ID_idx")
 }
 
 enum Rol {

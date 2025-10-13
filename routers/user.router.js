@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const actionsUser = require('../controllers/user.controllers');
-
+const multer = require("multer");
+const { upload } = require("../helpers/general_helper");
 
 router.post('/loginuser', actionsUser.loginUser);
 router.post('/verificarCandidato', actionsUser.verificarCandidato);
