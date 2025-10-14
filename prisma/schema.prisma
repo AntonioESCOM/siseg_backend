@@ -89,7 +89,6 @@ model PAdmin {
   estatus             Int?                  @map("ESTATUS")
   perfil              Int?                  @map("PERFIL")
   codigosQr           CodigoQr[]
-  encuestas           Encuesta[]
   expedientes         Expediente[]
   persona             Persona               @relation(fields: [boleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "P_ADMIN_ibfk_1")
   ESTATUS_P_ADMIN     ESTATUS_P_ADMIN?      @relation(fields: [estatus], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "P_ADMIN_ibfk_2")
@@ -149,16 +148,12 @@ model Reporte {
 
 /// ========== ENCUESTA ==========
 model Encuesta {
-  id             Int       @id @default(autoincrement()) @map("ID")
-  adminEncargado String?   @map("ADMIN_ENCARGADO") @db.VarChar(12)
-  alumnoBoleta   String?   @map("ALUMNO") @db.VarChar(12)
-  fechaRegistro  DateTime? @map("FECHA_REGISTRO") @db.DateTime(0)
-  pregunta       Int?      @map("PREGUNTA")
-  respuesta      Int?      @map("RESPUESTA")
-  alumno         Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "ENCUESTA_ibfk_1")
-  admin          PAdmin?   @relation(fields: [adminEncargado], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "ENCUESTA_ibfk_2")
+  id            Int       @id @default(autoincrement()) @map("ID")
+  alumnoBoleta  String?   @map("ALUMNO") @db.VarChar(12)
+  fechaRegistro DateTime? @map("FECHA_REGISTRO") @db.DateTime(0)
+  respuesta     String?   @map("RESPUESTA") @db.VarChar(2048)
+  alumno        Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "ENCUESTA_ibfk_1")
 
-  @@index([adminEncargado], map: "ADMIN_ENCARGADO")
   @@index([alumnoBoleta], map: "ALUMNO")
   @@map("ENCUESTA")
 }

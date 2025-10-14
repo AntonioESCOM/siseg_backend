@@ -491,6 +491,13 @@ actions.obtenerTodosDatosAdmin = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.json({ error: 1, message: "Token expirado" });
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
   }
 };
 
@@ -517,6 +524,244 @@ actions.obtenerPlazaAsignada = async (req, res) => {
   }
 };
 
+
+actions.obtenerkpis = async (req, res) => {
+  const { tk } = req.query;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const alumnosRegistrados = await prisma.Alumno.count();
+      const alumnosRealizandoSS = await prisma.Alumno.count({where: {estatus: 1 }});
+      const reportesdeIncidencias = await prisma.Reporte.count({where: {estatus: 1 }});
+      res.json({ error: 0, message: "Datos", alumnosRegistrados, alumnosRealizandoSS,reportesdeIncidencias });
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }     
+  } catch (error) {
+    console.log(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
+  }
+};
+
+actions.obtenerTodosAlumnos = async (req, res) => {
+  const { tk } = req.query;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const alumnos = await prisma.Alumno.findMany({
+        include: { persona: true, direccion: true },
+      });
+      const data = alumnos.map((alumno) => ({
+        boleta: alumno.boleta,
+        nombre: alumno.persona.nombre,
+        apellido_paterno: alumno.persona.APELLIDO_PATERNO,
+        apellido_materno: alumno.persona.APELLIDO_MATERNO,
+        curp: alumno.persona.curp,
+        rfc: alumno.rfc,
+        correo: alumno.persona.correo,
+        generacion: alumno.generacion,
+        promedio: alumno.promedio,
+        carrera: alumno.carrera,
+        estatus: alumno.estatus,
+        sexo: alumno.persona.sexo,
+        telcelular: alumno.persona.telefonoMovil,
+        tellocal: alumno.persona.telefonoFijo,
+        sede: alumno.sede,
+        calle_y_numero: alumno.direccion?.calle || "",
+        colonia: alumno.direccion?.colonia || "",
+        delegacion: alumno.direccion?.delegacionMunicipio || "",
+        estado: alumno.direccion?.estado || "",
+        cp: alumno.direccion?.cp || "",
+      }));
+      res.json({ error: 0, message: "Datos", data });
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    } 
+  } catch (error) {
+    console.log(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
+  }
+};
+
+actions.editarAlumno = async (req, res) => {
+  const {
+    apellido_materno,
+    apellido_paterno,
+    boleta,
+    carrera,
+    calle_y_numero,
+    colonia,
+    correo,
+    cp,
+    curp,
+    delegacion,
+    estado,
+    generacion,
+    nombre,
+    promedio, 
+    rfc,
+    sexo,
+    telcelular,
+    tellocal,
+    tk
+  } = req.body;
+  try { 
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const user = await prisma.Persona.update({
+        where: { boleta: boleta },
+        data: {
+          correo: correo,
+          curp: curp,
+          nombre: nombre,
+          APELLIDO_PATERNO: apellido_paterno,
+          APELLIDO_MATERNO: apellido_materno,
+          sexo: sexo,
+          telefonoMovil: telcelular,
+          telefonoFijo: tellocal
+        },
+      });
+      const alumno = await prisma.Alumno.update({
+        where: { boleta: boleta },
+        data: {
+          rfc: rfc,
+          generacion: generacion,
+          promedio: promedio,
+          carrera: carrera 
+        },
+      });
+      if(await prisma.Direccion.findUnique({ where: { alumnoBoleta: boleta }}) != undefined){
+      const direccion = await prisma.Direccion.update({
+        where: { alumnoBoleta: boleta },
+        data: {
+          calle: calle_y_numero,
+          colonia: colonia,
+          delegacionMunicipio: delegacion,
+          cp: cp,
+          estado: estado,
+        },
+      });
+    } else {
+      const direccion = await prisma.Direccion.create({
+        data: {
+          alumnoBoleta: boleta, 
+          calle: calle,
+          colonia: colonia,
+          delegacionMunicipio: delegacion,
+          cp: cp,
+          estado: estado,
+        },
+      });
+    }
+      res.json({ error: 0, message: "Se ha editado al alumno", user, alumno });
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    } 
+  } catch (error) {
+    console.log(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {  
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
+  }
+};
+
+actions.desactivarAlumno = async (req, res) => {
+  const { boleta, tk } = req.body;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const alumno = await prisma.Alumno.update({
+        where: { boleta: boleta },
+        data: { estatus: 0 },
+      });
+      res.json({ error: 0, message: "Se ha desactivado al alumno" });
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    }
+    else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    }
+    else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
+  }
+};  
+/*
+actions.agregarAlumno = async (req, res) => {
+  const {
+    apellido_materno,
+    apellido_paterno,
+    boleta,
+    carrera,
+    correo,
+    curp,
+    generacion,
+    nombre,
+    promedio,
+    tk
+  } = req.body;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const user = await prisma.Persona.create({
+        data: {
+          boleta: boleta,
+          correo: correo,
+          curp: curp,
+          nombre: nombre,
+          APELLIDO_PATERNO: apellido_paterno,
+          APELLIDO_MATERNO:apellido_materno
+        }
+      });
+      const alumno = await prisma.Alumno.create({
+        data: {
+          boleta: boleta,
+          generacion: generacion,
+          promedio: promedio,
+          carrera: carrera,
+          estatus: 0
+        }
+      });
+      res.json({ error: 0, message: "Se ha agregado al alumno", user, alumno });
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    }
+    else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }   
+  }
+};
+*/
+
+          
 
 
 

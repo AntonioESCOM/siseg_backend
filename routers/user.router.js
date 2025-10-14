@@ -16,5 +16,9 @@ router.get('/expedienteDigital', actionsUser.expedienteDigital);
 router.post('/subirArchivo',actionsUser.subirArchivo);
 router.get('/obtenerTodosDatosAdmin', actionsUser.obtenerTodosDatosAdmin);
 router.get('/obtenerPlazaAsignada', actionsUser.obtenerPlazaAsignada);
+router.get('/obtenerkpis', actionsUser.obtenerkpis);
+router.get('/obtenerTodosAlumnos', actionsUser.obtenerTodosAlumnos);
+router.post('/editarAlumno', actionsUser.editarAlumno);
+router.post('/desactivarAlumno', actionsUser.desactivarAlumno);
 
 module.exports = router

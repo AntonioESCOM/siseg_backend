@@ -1,9 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer');
-const jwt = require('jsonwebtoken');
-const { sendEmail } = require('../helpers/general_helper');
 const { verifyTokenWithErrorHandling } = require('../helpers/general_helper');
 const fs = require('fs').promises;
 const path = require('path');
