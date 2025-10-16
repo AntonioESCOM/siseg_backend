@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const actionsUser = require('../controllers/user.controllers');
 const multer = require("multer");
-const { upload } = require("../helpers/general_helper");
 
 router.post('/loginuser', actionsUser.loginUser);
 router.post('/verificarCandidato', actionsUser.verificarCandidato);
@@ -20,5 +19,7 @@ router.get('/obtenerkpis', actionsUser.obtenerkpis);
 router.get('/obtenerTodosAlumnos', actionsUser.obtenerTodosAlumnos);
 router.post('/editarAlumno', actionsUser.editarAlumno);
 router.post('/desactivarAlumno', actionsUser.desactivarAlumno);
+router.post('/agregarAlumno', actionsUser.agregarAlumno);
+router.post('/cargarAlumnos', actionsUser.cargarAlumnos);
 
 module.exports = router

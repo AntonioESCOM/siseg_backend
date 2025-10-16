@@ -8,6 +8,7 @@ const { verifyTokenWithErrorHandling } = require("../helpers/general_helper");
 const { upload } = require("../helpers/general_helper");
 const fs = require("fs").promises;
 const path = require("path");
+const xlsx = require('xlsx');
 
 const actions = {};
 
@@ -707,7 +708,7 @@ actions.desactivarAlumno = async (req, res) => {
     }
   }
 };  
-/*
+
 actions.agregarAlumno = async (req, res) => {
   const {
     apellido_materno,
@@ -716,14 +717,18 @@ actions.agregarAlumno = async (req, res) => {
     carrera,
     correo,
     curp,
+    estatus,
     generacion,
     nombre,
     promedio,
     tk
   } = req.body;
   try {
-    if (tk) {
+    if (tk,apellido_materno,apellido_paterno,boleta,carrera,correo,curp,estatus,generacion,nombre,promedio) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      if(await prisma.Persona.findUnique({ where: { boleta: boleta }}) != undefined){
+        return res.json({ error: 1, message: "La boleta ya está registrada" });
+      }
       const user = await prisma.Persona.create({
         data: {
           boleta: boleta,
@@ -731,7 +736,8 @@ actions.agregarAlumno = async (req, res) => {
           curp: curp,
           nombre: nombre,
           APELLIDO_PATERNO: apellido_paterno,
-          APELLIDO_MATERNO:apellido_materno
+          APELLIDO_MATERNO:apellido_materno,
+          rol: "ALUMNO"
         }
       });
       const alumno = await prisma.Alumno.create({
@@ -740,12 +746,12 @@ actions.agregarAlumno = async (req, res) => {
           generacion: generacion,
           promedio: promedio,
           carrera: carrera,
-          estatus: 0
+          estatus: estatus
         }
       });
       res.json({ error: 0, message: "Se ha agregado al alumno", user, alumno });
     } else {
-      res.json({ error: 1, message: "Token requerido" });
+      res.json({ error: 1, message: "Faltan parámetros" });
     }
   } catch (error) {
     console.log(error);
@@ -759,8 +765,107 @@ actions.agregarAlumno = async (req, res) => {
     }   
   }
 };
-*/
+actions.cargarAlumnos = async (req, res) => {
+    upload.single("file")(req, res, async (err) => {
+        const { tk } = req.query; 
+        if (err) {
+          console.error("Multer Error:", err);
+          return res.status(500).json({ 
+              error: 1, 
+              message: "Error al subir el archivo", 
+              details: err.message 
+          });
+        }
+        try {
+            if (!tk) {
+                if (req.file) fs.unlinkSync(req.file.path); 
+                return res.json({ error: 1, message: "Token requerido" });
+            }
 
+            const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+            if (!req.file) {
+                return res.json({ error: 1, message: "Archivo Excel requerido" });
+            }
+            const filePath = req.file.path; 
+            const workbook = xlsx.readFile(filePath);
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const alumnos = xlsx.utils.sheet_to_json(worksheet); 
+            const errores = [];
+
+            for (const alumno of alumnos) {
+              if (alumno['10o'] === '10o' && alumno['CARRERA'] === 'CARRERA') {
+                  continue; 
+              }
+              const matricula = alumno['10o'];
+              if (!matricula || typeof matricula !== 'number' || matricula.toString().length < 10) {
+                  errores.push({ alumno, error: "Matrícula inválida: " + matricula });
+                  continue;
+              }
+              const boleta = matricula.toString().trim();
+              const nombre = (alumno['MCP'] || alumno['MCH']).toString().trim();
+              const correo = (alumno['CORREO'] || '').toString().trim();
+              const curp = (alumno['CURP'] || '').toString().trim();
+              const generacion = alumno['PROMOCIÓN DE IMP'].toString().trim();
+              const carrera = (alumno['CARRERA'] || '').toString().trim();
+              const estatus = alumno['ESTATUS'].toString().trim();
+              if (carrera === "H-MEDICO CIRUJANO Y HOMEOPATA") {
+                numcarrera = 1;
+              } else if (carrera === "P-MEDICO CIRUJANO Y PARTERO") {
+                numcarrera = 2;
+              }
+              if(estatus === "CANDIDATO"){ {
+                numestatus = 1;
+              }} else if (estatus === "ASPIRANTE") {
+                numestatus = 2;
+              }
+              if(await prisma.Persona.findUnique({ where: { boleta: boleta }}) != undefined){
+                errores.push({ alumno, error: "La boleta ya está registrada: " + boleta });
+                continue;
+              }
+              const user = await prisma.Persona.create({
+                data: {
+                  boleta: boleta,
+                  correo: correo,
+                  curp: curp,
+                  nombre: nombre,
+                  rol: "ALUMNO"
+                }
+              });
+
+              const alumnoRegistrado = await prisma.Alumno.create({
+                data: {
+                  boleta: boleta,
+                  estatus: numestatus,
+                  generacion: generacion,
+                  carrera: numcarrera
+                }
+              });
+            }
+            return res.json({ 
+                error: 0, 
+                message: "Alumnos cargados exitosamente", 
+                totalAlumnos: alumnos.length,
+                errores: errores
+            });
+        } catch (error) {
+            console.error(error); 
+            if (error.message === "TOKEN_EXPIRED") {
+                return res.json({ error: 1, message: "Token expirado" });
+            }
+            if (error.message === "INVALID_TOKEN") {
+                return res.json({ error: 1, message: "Token inválido" });
+            }
+            return res.json({ error: 1, message: "Error al procesar los datos: " + error.message });
+        } finally {
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error("Error al eliminar archivo temporal:", err);
+                });
+            }
+        }
+    }); 
+};
           
 
 
