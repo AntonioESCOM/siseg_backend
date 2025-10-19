@@ -19,14 +19,12 @@ actions.obtenerReportesAlumno = async (req, res) => {
                 reportes.map(async (reporte) => {
                   const evidencias = await prisma.REPORTE_EVIDENCIA.findMany({ where: { REPORTE_ID: reporte.id }, select: { URL_ARCHIVO: true }  });
                   const observaciones = await prisma.REPORTE_OBSERVACION.findMany({ where: { REPORTE_ID: reporte.id }, select: { DESCRIPCION: true, FECHA_DATETIME:true, AUTOR_ADMIN:true } });
-                  observaciones.map(async obs => {
-                    obs.FECHA_DATETIME = obs.FECHA_DATETIME;
-                    obs.AUTOR_ADMIN =  await prisma.Persona.findUnique({
+                  for (const obs of observaciones) {
+                    obs.AUTOR_ADMIN  = await prisma.Persona.findUnique({
                       where: { boleta: obs.AUTOR_ADMIN },
                       select: { nombre: true, APELLIDO_PATERNO: true, APELLIDO_MATERNO: true }
                     });
-                    obs.DESCRIPCION = obs.DESCRIPCION;
-                  });
+                  }
                   return { ...reporte, evidencias,observaciones};
                 })
               );

@@ -21,5 +21,6 @@ router.post('/editarAlumno', actionsUser.editarAlumno);
 router.post('/desactivarAlumno', actionsUser.desactivarAlumno);
 router.post('/agregarAlumno', actionsUser.agregarAlumno);
 router.post('/cargarAlumnos', actionsUser.cargarAlumnos);
+router.get('/obtenerTodosAdmins', actionsUser.obtenerTodosAdmins);
 
 module.exports = router

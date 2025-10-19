@@ -848,8 +848,95 @@ actions.cargarAlumnos = async (req, res) => {
     }); 
 };
           
+actions.obtenerTodosAdmins = async (req, res) => {
+  const { tk } = req.query; 
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const admins = await prisma.PAdmin.findMany({
+        include: { persona: true },
+      });
+      for (let admin of admins) {
+        admin.estatus = await prisma.ESTATUS_P_ADMIN.findUnique({
+          where: { ID: admin.estatus },
+          select: { DESCRIPCION: true }
+        });
+        if(admin.perfil === 1){
+          admin.perfil = "Administrador de seguimiento";
+        } else if (admin.perfil === 2) {
+          admin.perfil = "Administrador general";
+        }
+      }
+      res.json({ error: 0, message: "Datos", admins });
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.error(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {    
+    res.json({ error: 1, message: "Error al obtener datos" });
+    }
+  }
+};
 
-
-
+actions.agregarAdmin = async (req, res) => {
+  const {
+    apellido_materno,
+    apellido_paterno,
+    curp,
+    correo,
+    nombre,
+    numempleado,
+    perfil,
+    telcelular,
+    tellocal,
+    tk
+  } = req.body;
+  try {
+    if (tk,apellido_materno,apellido_paterno,curp,correo,estatus,nombre,numempleado,perfil,telcelular,tellocal) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      if(await prisma.Persona.findUnique({ where: { boleta: numempleado }}) != undefined){
+        return res.json({ error: 1, message: "El número de empleado ya está registrado" });
+      } 
+      const user = await prisma.Persona.create({
+        data: {
+          boleta: numempleado,
+          correo: correo,
+          curp: curp,
+          nombre: nombre,
+          APELLIDO_PATERNO: apellido_paterno,
+          APELLIDO_MATERNO:apellido_materno,
+          telefonoMovil: telcelular,
+          telefonoFijo: tellocal,
+          rol: "ADMIN"
+        }
+      });
+      const admin = await prisma.PAdmin.create({
+        data: {
+          boleta: numempleado,
+          perfil: perfil,
+          estatus: estatus
+        }
+      });
+      res.json({ error: 0, message: "Se ha agregado al administrador", user, admin });
+    }
+    else {
+      res.json({ error: 1, message: "Faltan parámetros" });
+    }
+  } catch (error) {
+    console.error(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      res.json({ error: 1, message: "Error al agregar administrador" });
+    }
+  }
+};
 
 module.exports = actions;
