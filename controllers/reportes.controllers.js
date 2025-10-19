@@ -13,6 +13,14 @@ actions.obtenerReportesAlumno = async (req, res) => {
         if(tk){
             const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
             const reportes = await prisma.Reporte.findMany({where: { alumnoBoleta: payload.id }}); 
+            for (let reporte of reportes) {
+              if (reporte.adminEncargado) {
+                reporte.adminEncargado = await prisma.Persona.findUnique({
+                  where: { boleta: reporte.adminEncargado },
+                  select: { nombre: true, APELLIDO_PATERNO: true, APELLIDO_MATERNO: true }
+                });
+              }
+            }
             const fullreportes = [];
             if (reportes) {
               const fullreportes = await Promise.all(
@@ -24,7 +32,7 @@ actions.obtenerReportesAlumno = async (req, res) => {
                       where: { boleta: obs.AUTOR_ADMIN },
                       select: { nombre: true, APELLIDO_PATERNO: true, APELLIDO_MATERNO: true }
                     });
-                  }
+                  }        
                   return { ...reporte, evidencias,observaciones};
                 })
               );

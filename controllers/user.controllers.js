@@ -572,6 +572,10 @@ actions.obtenerTodosAlumnos = async (req, res) => {
       const alumnos = await prisma.Alumno.findMany({
         include: { persona: true, direccion: true},
       });
+      for (let alumno of alumnos) {
+        alumno.carrera = await prisma.CARRERA.findUnique({ where: { ID: alumno.carrera }, select: { NOMBRE: true } });
+        alumno.estatus = await prisma.ESTATUS_ALUMNO.findUnique({ where: { ID: alumno.estatus }, select: { DESCRIPCION: true } });
+      }
       const data = alumnos.map((alumno) => ({
         
         boleta: alumno.boleta,
@@ -897,7 +901,7 @@ actions.agregarAdmin = async (req, res) => {
     tk
   } = req.body;
   try {
-    if (tk,apellido_materno,apellido_paterno,curp,correo,estatus,nombre,numempleado,perfil,telcelular,tellocal) {
+    if (tk,apellido_materno,apellido_paterno,curp,correo,nombre,numempleado,perfil,telcelular,tellocal) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       if(await prisma.Persona.findUnique({ where: { boleta: numempleado }}) != undefined){
         return res.json({ error: 1, message: "El número de empleado ya está registrado" });
@@ -912,14 +916,14 @@ actions.agregarAdmin = async (req, res) => {
           APELLIDO_MATERNO:apellido_materno,
           telefonoMovil: telcelular,
           telefonoFijo: tellocal,
-          rol: "ADMIN"
+          rol: "P_ADMIN"
         }
       });
       const admin = await prisma.PAdmin.create({
         data: {
           boleta: numempleado,
           perfil: perfil,
-          estatus: estatus
+          estatus: 1
         }
       });
       res.json({ error: 0, message: "Se ha agregado al administrador", user, admin });
