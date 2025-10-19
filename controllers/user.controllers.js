@@ -371,6 +371,18 @@ actions.expedienteDigital = async (req, res) => {
       const documents = await prisma.Expediente.findMany({
         where: { alumnoBoleta: payload.id },
       });
+
+      for (let doc of documents) {
+        if (doc.adminEncargado) {
+          doc.adminEncargado = await prisma.Persona.findUnique({
+            where: { boleta: doc.adminEncargado },
+            select: { nombre: true, APELLIDO_PATERNO: true, APELLIDO_MATERNO: true }
+          });
+        } else {
+          doc.adminEncargado = null; 
+        }
+      }
+
       res.json({ error: 0, message: "Datos", documents });
     } else {
       res.json({ error: 1, message: "Token requerido" });
@@ -386,6 +398,8 @@ actions.expedienteDigital = async (req, res) => {
     }
   }
 };
+
+
 
 actions.subirArchivo = async (req, res) => {
   const { nombre,tk } = req.query;
@@ -532,7 +546,7 @@ actions.obtenerkpis = async (req, res) => {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       const alumnosRegistrados = await prisma.Alumno.count();
-      const alumnosRealizandoSS = await prisma.Alumno.count({where: {estatus: 1 }});
+      const alumnosRealizandoSS = await prisma.Alumno.count({where: {estatus: 3 }});
       const reportesdeIncidencias = await prisma.Reporte.count({where: {estatus: 1 }});
       res.json({ error: 0, message: "Datos", alumnosRegistrados, alumnosRealizandoSS,reportesdeIncidencias });
     } else {
@@ -556,9 +570,10 @@ actions.obtenerTodosAlumnos = async (req, res) => {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       const alumnos = await prisma.Alumno.findMany({
-        include: { persona: true, direccion: true },
+        include: { persona: true, direccion: true},
       });
       const data = alumnos.map((alumno) => ({
+        
         boleta: alumno.boleta,
         nombre: alumno.persona.nombre,
         apellido_paterno: alumno.persona.APELLIDO_PATERNO,
@@ -602,20 +617,12 @@ actions.editarAlumno = async (req, res) => {
     apellido_paterno,
     boleta,
     carrera,
-    calle_y_numero,
-    colonia,
     correo,
-    cp,
     curp,
-    delegacion,
-    estado,
+    estatus,
     generacion,
     nombre,
-    promedio, 
-    rfc,
-    sexo,
-    telcelular,
-    tellocal,
+    promedio,
     tk
   } = req.body;
   try { 
@@ -629,43 +636,17 @@ actions.editarAlumno = async (req, res) => {
           nombre: nombre,
           APELLIDO_PATERNO: apellido_paterno,
           APELLIDO_MATERNO: apellido_materno,
-          sexo: sexo,
-          telefonoMovil: telcelular,
-          telefonoFijo: tellocal
         },
       });
       const alumno = await prisma.Alumno.update({
         where: { boleta: boleta },
         data: {
-          rfc: rfc,
           generacion: generacion,
           promedio: promedio,
-          carrera: carrera 
+          carrera: carrera, 
+          estatus: estatus
         },
       });
-      if(await prisma.Direccion.findUnique({ where: { alumnoBoleta: boleta }}) != undefined){
-      const direccion = await prisma.Direccion.update({
-        where: { alumnoBoleta: boleta },
-        data: {
-          calle: calle_y_numero,
-          colonia: colonia,
-          delegacionMunicipio: delegacion,
-          cp: cp,
-          estado: estado,
-        },
-      });
-    } else {
-      const direccion = await prisma.Direccion.create({
-        data: {
-          alumnoBoleta: boleta, 
-          calle: calle,
-          colonia: colonia,
-          delegacionMunicipio: delegacion,
-          cp: cp,
-          estado: estado,
-        },
-      });
-    }
       res.json({ error: 0, message: "Se ha editado al alumno", user, alumno });
     } else {
       res.json({ error: 1, message: "Token requerido" });
