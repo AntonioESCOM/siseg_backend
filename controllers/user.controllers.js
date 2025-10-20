@@ -858,7 +858,7 @@ actions.obtenerTodosAdmins = async (req, res) => {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       const admins = await prisma.PAdmin.findMany({
-        include: { persona: true },
+        include: { persona: true }, where: {estatus: 1}
       });
       for (let admin of admins) {
         admin.estatus = await prisma.ESTATUS_P_ADMIN.findUnique({
@@ -942,5 +942,126 @@ actions.agregarAdmin = async (req, res) => {
     }
   }
 };
+
+actions.editarAdmin = async (req, res) => {
+  const {
+    apellido_materno, 
+    apellido_paterno,
+    curp,
+    correo,
+    nombre,
+    numempleado,
+    perfil,
+    telcelular,
+    tellocal,
+    tk
+  } = req.body;
+
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const admin = await prisma.PAdmin.findUnique({
+        where: { boleta: numempleado },
+      });
+      if (!admin) {
+        return res.json({ error: 1, message: "Administrador no encontrado" });
+      }
+      await prisma.PAdmin.update({
+        where: { boleta: numempleado },
+        data: {
+          perfil: perfil,
+        },
+      });
+      await prisma.Persona.update({
+        where: { boleta: numempleado },
+        data: {
+          nombre: nombre,
+          APELLIDO_PATERNO: apellido_paterno,
+          APELLIDO_MATERNO: apellido_materno,
+          correo: correo,
+          curp: curp,
+          telefonoMovil: telcelular,
+          telefonoFijo: tellocal,
+        },
+      });
+      res.json({ error: 0, message: "Administrador actualizado", admin });
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.error(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      res.json({ error: 1, message: "Error al editar administrador" });
+    }
+  }
+};
+
+actions.desactivarAdmin = async (req, res) => {
+  const { numempleado, tk } = req.body;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      if(payload.rol !== "P_ADMIN"){
+        return res.json({ error: 1, message: "No tienes permisos para desactivar administradores" });
+      }
+      const admin = await prisma.PAdmin.update({
+        where: { boleta: numempleado },
+        data: { estatus: 0 },
+      });
+      res.json({ error: 0, message: "Se ha desactivado al administrador" });
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }   
+  } catch (error) {
+    console.log(error); 
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      res.json({ error: 1, message: "Error al desactivar administrador" });
+    }
+  }
+};
+
+actions.validarExpediente = async (req, res) => {
+  const { ID, estatus, observacion, tk } = req.body;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY); 
+      if (payload.rol !== "P_ADMIN") {
+        return res.json({ error: 1, message: "No tienes permisos para validar expedientes" });  
+      }
+      const expediente = await prisma.Expediente.update({
+        where: { ID: ID },
+        data: {
+          estatus: estatus,
+          observacion: observacion,
+          adminEncargado: payload.id
+        }
+      });
+      res.json({ error: 0, message: "Expediente actualizado", expediente });
+    }
+    else {
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      return res.json({ error: 1, message: "Error al validar expediente" });
+    }
+  }
+};
+
+
+
 
 module.exports = actions;

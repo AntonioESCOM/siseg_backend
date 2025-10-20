@@ -35,4 +35,35 @@ actions.generarQr= async (req, res) => {
       }
 }
 
+actions.registrarQr= async (req, res) => {
+    const {boleta,tk} = req.body;
+      try {
+        if(tk){
+            const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+            const nuevoRegistro = await prisma.codigoQr.create({
+                data: {
+                  adminEncargado: payload.id,
+                  alumnoBoleta: boleta,
+                  fechaLectura: new Date(),
+                },
+              });
+              if (nuevoRegistro) {
+                res.json({ error: 0, message: "Registro de QR exitoso", nuevoRegistro });
+              } else {
+                res.json({ error: 1, message: "Error al registrar QR" });
+              }
+        }else{
+          res.json({ error: 1, message: "Token requerido" });
+        }
+      } catch (error) {
+        console.log(error);
+        if (error.message === 'TOKEN_EXPIRED') {
+          return res.json({ error: 1, message: "Token expirado" });
+        } else if (error.message === 'INVALID_TOKEN') {
+          return res.json({ error: 1, message: "Token inválido" });
+        } else {
+          return res.json({ error: 1, message: "Error al confirmar usuario" });
+        }
+      }
+}
 module.exports = actions

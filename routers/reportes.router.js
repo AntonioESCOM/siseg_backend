@@ -33,4 +33,7 @@ const upload = multer({ storage: storage });
 
 router.get('/obtenerReportesAlumno', actionsreportes.obtenerReportesAlumno);
 router.post('/agregarReporte', upload.array("evidencias", 5), actionsreportes.agregarReporte);
-module.exports = router
+router.get('/obtenerTodosReportes', actionsreportes.obtenerTodosReportes);
+router.post("/cambiarEstatusReporte", actionsreportes.cambiarEstatusReporte);
+router.post("/agregarObservacionReporte", actionsreportes.agregarObservacionReporte);
+module.exports = router;
