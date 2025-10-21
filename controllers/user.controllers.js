@@ -885,8 +885,28 @@ actions.obtenerTodosAdmins = async (req, res) => {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       const admins = await prisma.PAdmin.findMany({
-        include: { persona: true }, where: {estatus: 1}, select: {  perfil: true, estatus: true, persona: { select: { boleta: true, nombre: true, APELLIDO_PATERNO: true, APELLIDO_MATERNO: true, curp: true, correo: true, sexo: true, telefonoMovil: true, telefonoFijo: true } } }
+        where: {
+          estatus: 1
+        },
+        select: {
+          perfil: true,
+          estatus: true,
+          persona: {
+            select: {
+              boleta: true,
+              nombre: true,
+              APELLIDO_PATERNO: true,
+              APELLIDO_MATERNO: true,
+              curp: true,
+              correo: true,
+              sexo: true,
+              telefonoMovil: true,
+              telefonoFijo: true
+            }
+          }
+        }
       });
+
       for (let admin of admins) {
         admin.estatus = await prisma.ESTATUS_P_ADMIN.findUnique({
           where: { ID: admin.estatus },
