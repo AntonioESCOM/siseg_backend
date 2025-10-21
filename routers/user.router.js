@@ -26,5 +26,6 @@ router.post('/agregarAdmin', actionsUser.agregarAdmin);
 router.post('/editarAdmin', actionsUser.editarAdmin);
 router.post('/desactivarAdmin', actionsUser.desactivarAdmin);
 router.post('/validarExpediente', actionsUser.validarExpediente);
+router.get('/refreshToken', actionsUser.refreshToken);
 
 module.exports = router

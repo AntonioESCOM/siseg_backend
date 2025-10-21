@@ -35,6 +35,28 @@ actions.loginUser = async (req, res) => {
   }
 };
 
+actions.refreshToken = async (req, res) => {
+  const { tk } = req.body;
+  try {
+    const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+    const newToken = jwt.sign(
+      { id: payload.id, username: payload.username, rol: payload.rol },
+      process.env.SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+    res.json({ error: 0, message: "Token renovado", token: newToken });
+  } catch (error) {
+    console.log(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
+  }
+};
+
 actions.verificarCandidato = async (req, res) => {
   let { email } = req.body;
   let correo = email;
@@ -143,10 +165,15 @@ actions.restablecerPassword = async (req, res) => {
   const { password, tk } = req.body;
   try {
     if (tk) {
+      bcrypt.hash(password, 10, (err, hashedPassword) => {
+        if (err) {
+          res.json({ error: 1, message: "Error al encriptar contraseña" });
+        } 
+      });
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       await prisma.Persona.update({
         where: { boleta: payload.id },
-        data: { contrasena: password },
+        data: { contrasena: hashedPassword },
       });
       res.json({ error: 0, message: "Se ha restablecido la contraseña" });
     } else {
@@ -858,7 +885,7 @@ actions.obtenerTodosAdmins = async (req, res) => {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       const admins = await prisma.PAdmin.findMany({
-        include: { persona: true }, where: {estatus: 1}
+        include: { persona: true }, where: {estatus: 1}, select: {  perfil: true, estatus: true, persona: { select: { boleta: true, nombre: true, APELLIDO_PATERNO: true, APELLIDO_MATERNO: true, curp: true, correo: true, sexo: true, telefonoMovil: true, telefonoFijo: true } } }
       });
       for (let admin of admins) {
         admin.estatus = await prisma.ESTATUS_P_ADMIN.findUnique({
