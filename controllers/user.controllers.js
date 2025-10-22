@@ -885,9 +885,6 @@ actions.obtenerTodosAdmins = async (req, res) => {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       const admins = await prisma.PAdmin.findMany({
-        where: {
-          estatus: 1
-        },
         select: {
           perfil: true,
           estatus: true,
