@@ -520,6 +520,7 @@ actions.obtenerTodosDatosAdmin = async (req, res) => {
           apellido_paterno: user.APELLIDO_PATERNO,
           apellido_materno: user.APELLIDO_MATERNO,
           perfil: user.pAdmin.perfil,
+          sexo: user.sexo,
           telcelular: user.telefonoMovil,
           tellocal: user.telefonoFijo,
         };
@@ -654,6 +655,7 @@ actions.editarAlumno = async (req, res) => {
     generacion,
     nombre,
     promedio,
+    sexo,
     tk
   } = req.body;
   try { 
@@ -667,6 +669,7 @@ actions.editarAlumno = async (req, res) => {
           nombre: nombre,
           APELLIDO_PATERNO: apellido_paterno,
           APELLIDO_MATERNO: apellido_materno,
+          sexo: sexo
         },
       });
       const alumno = await prisma.Alumno.update({
@@ -936,10 +939,12 @@ actions.agregarAdmin = async (req, res) => {
     apellido_materno,
     apellido_paterno,
     curp,
+    estatus,
     correo,
     nombre,
     numempleado,
     perfil,
+    sexo,
     telcelular,
     tellocal,
     tk
@@ -955,9 +960,11 @@ actions.agregarAdmin = async (req, res) => {
           boleta: numempleado,
           correo: correo,
           curp: curp,
+          estatus: estatus,
           nombre: nombre,
           APELLIDO_PATERNO: apellido_paterno,
           APELLIDO_MATERNO:apellido_materno,
+          sexo: sexo,
           telefonoMovil: telcelular,
           telefonoFijo: tellocal,
           rol: "P_ADMIN"
@@ -993,9 +1000,11 @@ actions.editarAdmin = async (req, res) => {
     apellido_paterno,
     curp,
     correo,
+    estatus,
     nombre,
     numempleado,
     perfil,
+    sexo,
     telcelular,
     tellocal,
     tk
@@ -1014,6 +1023,8 @@ actions.editarAdmin = async (req, res) => {
         where: { boleta: numempleado },
         data: {
           perfil: perfil,
+          estatus: estatus,
+
         },
       });
       await prisma.Persona.update({
@@ -1024,6 +1035,7 @@ actions.editarAdmin = async (req, res) => {
           APELLIDO_MATERNO: apellido_materno,
           correo: correo,
           curp: curp,
+          sexo: sexo,
           telefonoMovil: telcelular,
           telefonoFijo: tellocal,
         },
