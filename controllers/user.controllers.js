@@ -938,9 +938,9 @@ actions.agregarAdmin = async (req, res) => {
   const {
     apellido_materno,
     apellido_paterno,
+    correo,
     curp,
     estatus,
-    correo,
     nombre,
     numempleado,
     perfil,
@@ -998,8 +998,8 @@ actions.editarAdmin = async (req, res) => {
   const {
     apellido_materno, 
     apellido_paterno,
-    curp,
     correo,
+    curp,
     estatus,
     nombre,
     numempleado,
