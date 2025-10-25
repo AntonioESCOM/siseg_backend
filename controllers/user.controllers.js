@@ -950,7 +950,7 @@ actions.agregarAdmin = async (req, res) => {
     tk
   } = req.body;
   try {
-    if (tk,apellido_materno,apellido_paterno,curp,correo,nombre,numempleado,perfil,telcelular,tellocal) {
+    if (tk,apellido_materno,apellido_paterno,curp,correo,nombre,numempleado,perfil,telcelular) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       if(await prisma.Persona.findUnique({ where: { boleta: numempleado }}) != undefined){
         return res.json({ error: 1, message: "El número de empleado ya está registrado" });
