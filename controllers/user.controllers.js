@@ -391,12 +391,12 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
 };
 
 actions.expedienteDigital = async (req, res) => {
-  const { tk } = req.query;
+  const {boleta,tk} = req.query;
   try {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       const documents = await prisma.Expediente.findMany({
-        where: { alumnoBoleta: payload.id },
+        where: { alumnoBoleta: boleta },
       });
 
       for (let doc of documents) {
