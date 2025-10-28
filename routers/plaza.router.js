@@ -5,6 +5,7 @@ router.get('/obtenerPlazas', actionsUser.obtenerPlazas);
 router.post('/agregarPlaza', actionsUser.agregarPlaza);
 router.post('/eliminarPlaza', actionsUser.eliminarPlaza);
 router.post('/asignarPlaza', actionsUser.asignarPlaza);
+router.get('/getMapaData', actionsUser.getMapaData);
 
 
 
