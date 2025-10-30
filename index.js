@@ -32,11 +32,13 @@ const plaza = require('./routers/plaza.router');
 const qr = require('./routers/qr.router');
 const reportes = require('./routers/reportes.router');
 const encuesta = require('./routers/encuesta.router');
+app.use('/api/chatbot',require('./routers/chatbot.router'));
 app.use('/api/users',users);
 app.use('/api/plaza',plaza);
 app.use('/api/qr',qr);
 app.use('/api/reportes',reportes);
 app.use('/api/encuesta',encuesta);
+
 
 app.get("/api", (req, res) => {
   res.json({ message: "Hola desde el servidor!" });

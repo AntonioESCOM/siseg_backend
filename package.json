@@ -11,10 +11,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@pinecone-database/pinecone": "^6.1.2",
     "@prisma/client": "^6.15.0",
     "axios": "^1.13.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
+    "chromadb": "^3.1.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -22,7 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.6",
-    "pdf-parse": "^2.4.5",
+    "pdf-parse": "^1.1.4",
     "qrcode": "^1.5.4",
     "stopword": "^3.1.5",
     "xlsx": "^0.18.5"
