@@ -130,7 +130,7 @@ actions.restablecerPasswordEmail = async (req, res) => {
         { expiresIn: "15m" }
       );
       const verifyUrl =
-        process.env.BASE_URL + `api/users/confirmarCandidato?tk=${token}`;
+        process.env.FRONT_END_URL + `nueva-contrasena?tk=${token}`;
       let emailContent = await fs.readFile(
         "./templates/recoverPasswordTemplate.html",
         "utf8"
