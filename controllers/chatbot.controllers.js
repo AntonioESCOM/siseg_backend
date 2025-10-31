@@ -3,9 +3,9 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { Pinecone } = require("@pinecone-database/pinecone");
 
 // --- Configuración (¡Reemplaza con tus valores!) ---
-const GEMINI_API_KEY = "AIzaSyDWWbL2jTTymu9zwB37MPCUcNEo79L89Ho"; // Tu API Key de Google Gemini
+const GEMINI_API_KEY = "AIzaSyDWWbL2jTTymu9zwB37MPCUcNEo79L89Ho"; 
 const PINECONE_API_KEY = "pcsk_3PDaue_Q85z8zeoq2kQJVnMUwopg8r31g7qqNPYjYFb49Jz5Tb62a43VysGJyqTvmDR1vR";
-const PINECONE_HOST_URL = "https://siseg-3kch4h1.svc.aped-4627-b74a.pinecone.io"; // Ej: "servicio-social-xxxx.svc.gcp-starter.pinecone.io"
+const PINECONE_HOST_URL = "https://siseg-3kch4h1.svc.aped-4627-b74a.pinecone.io"; 
 const PINECONE_INDEX_NAME = "siseg"; 
 
 // --- Inicializar Clientes (puedes hacerlo globalmente) ---

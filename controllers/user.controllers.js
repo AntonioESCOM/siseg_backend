@@ -68,7 +68,7 @@ actions.verificarCandidato = async (req, res) => {
         process.env.SECRET_KEY,
         { expiresIn: "1h" }
       );
-      const verifyUrl = process.env.BASE_URL + `/confirm-email?tk=${token}`;
+      const verifyUrl = process.env.FRONT_END_URL + `/completar-registro?tk=${token}`;
       let emailContent = await fs.readFile(
         "./templates/confirmAccount.html",
         "utf8"
