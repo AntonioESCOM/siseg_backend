@@ -11,7 +11,7 @@ const app = express();
 app.set('trust proxy', 1);
 const uploadsDir = path.join(__dirname, 'uploads'); 
 app.use(cors({
-  origin: ['http://localhost:8081', 'http://localhost:3000'], // Especifica el dominio permitido
+  origin: ['http://localhost:8081', 'http://localhost:3000','https://happy-rock-0cf55001e.3.azurestaticapps.net'], // Especifica el dominio permitido
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos HTTP permitidos
   allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
   credentials: true // Permitir envío de cookies y credenciales
