@@ -5,22 +5,18 @@ const fs = require("fs");
 const pdfParse = require("pdf-parse");
 const path = require("path");
 
-// --- Configuración (¡Reemplaza con tus valores!) ---
-const GEMINI_API_KEY = "AIzaSyDWWbL2jTTymu9zwB37MPCUcNEo79L89Ho"; // Tu API Key de Google Gemini
-const PINECONE_API_KEY = "pcsk_3PDaue_Q85z8zeoq2kQJVnMUwopg8r31g7qqNPYjYFb49Jz5Tb62a43VysGJyqTvmDR1vR";
-const PINECONE_HOST_URL = "https://siseg-3kch4h1.svc.aped-4627-b74a.pinecone.io"; // Ej: "servicio-social-xxxx.svc.gcp-starter.pinecone.io"
-const PINECONE_INDEX_NAME = "siseg"; // El nombre que pusiste en Pinecone
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
+const PINECONE_HOST_URL = process.env.PINECONE_HOST_URL; 
+const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME; 
 
 const PDF_PATH = path.resolve('./uploads/infogeneralserviciosocialenmh.pdf');
-
-// --- Inicializar Clientes ---
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const pinecone = new Pinecone({ apiKey: PINECONE_API_KEY });
 const index = pinecone.index(PINECONE_INDEX_NAME);
 
-// --- Tu función de Chunking (sin cambios) ---
+
 function chunkText(text, maxLen = 800, overlap = 200) {
-    // ... (tu código de chunkText va aquí) ...
     const paras = text.split(/\n{2,}/);
     const chunks = [];
     let current = "";
@@ -47,36 +43,29 @@ function chunkText(text, maxLen = 800, overlap = 200) {
     return chunks;
 }
 
-// --- Nueva Función: Obtener Embedding desde Gemini ---
 async function getEmbedding(text) {
     try {
-        // Usamos el modelo de embedding de Google
         const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
         const result = await model.embedContent(text);
         const embedding = result.embedding;
-        return embedding.values; // Devuelve el array de 768 números
+        return embedding.values; 
     } catch (error) {
         console.error("Error al obtener embedding de Gemini:", error.message);
         throw error;
     }
 }
 
-// --- Función Principal de Indexación ---
 async function loadAndIndexPDF() {
     console.log("Iniciando indexación con APIs...");
     try {
-        // 1. Cargar y Parsear PDF (Tu código)
         const fileBuffer = fs.readFileSync(PDF_PATH);
         const data = await pdfParse(fileBuffer);
         const text = data.text || "";
         if (!text.trim()) throw new Error("PDF sin texto.");
 
-        // 2. Crear Chunks (Tu código)
         const chunks = chunkText(text, 700, 100);
         console.log(`PDF dividido en ${chunks.length} chunks.`);
 
-        // 3. Vectorizar y Almacenar Chunks en Pinecone
-        // Pinecone permite subir en "batches" (lotes) para más eficiencia
         const batchSize = 100;
         for (let i = 0; i < chunks.length; i += batchSize) {
             const batchChunks = chunks.slice(i, i + batchSize);
@@ -87,21 +76,15 @@ async function loadAndIndexPDF() {
             for (let j = 0; j < batchChunks.length; j++) {
                 const chunk = batchChunks[j];
                 const id = `chunk_${i + j}`;
-
-                // 3a. Obtener embedding de Gemini
                 const embedding = await getEmbedding(chunk);
-
-                // 3b. Preparar el vector para Pinecone
                 vectorsToUpsert.push({
                     id: id,
                     values: embedding,
                     metadata: {
-                        text: chunk // ¡Guardamos el texto original aquí!
+                        text: chunk 
                     }
                 });
             }
-
-            // 3c. Subir el lote a Pinecone
             await index.upsert(vectorsToUpsert);
         }
         

@@ -972,17 +972,19 @@ actions.agregarAdmin = async (req, res) => {
     tk
   } = req.body;
   try {
-    if (tk,apellido_materno,apellido_paterno,curp,correo,nombre,numempleado,perfil,telcelular) {
+    if (tk,apellido_materno,apellido_paterno,curp,correo,nombre,numempleado,perfil) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       if(await prisma.Persona.findUnique({ where: { boleta: numempleado }}) != undefined){
         return res.json({ error: 1, message: "El número de empleado ya está registrado" });
       } 
+      const randomPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
       const user = await prisma.Persona.create({
         data: {
           boleta: numempleado,
+          contrasena: hashedPassword,
           correo: correo,
           curp: curp,
-          estatus: estatus,
           nombre: nombre,
           APELLIDO_PATERNO: apellido_paterno,
           APELLIDO_MATERNO:apellido_materno,
@@ -996,9 +998,22 @@ actions.agregarAdmin = async (req, res) => {
         data: {
           boleta: numempleado,
           perfil: perfil,
-          estatus: 1
+          estatus: 0
         }
       });
+      const loginUrl = process.env.FRONT_END_URL + `/iniciar-sesion`;
+      let emailContent = await fs.readFile(
+        "./templates/sendCredentials.html",
+        "utf8"
+      );
+      emailContent = emailContent.replace(/\$loginUrl/g, loginUrl);
+      emailContent = emailContent.replace(/\$tempPassword/g, randomPassword);
+      await sendEmail({
+        to: correo,
+        subject: "Credenciales de acceso",
+        html: emailContent,
+      });
+      console.log(`Contraseña temporal para ${numempleado}: ${randomPassword}`);
       res.json({ error: 0, message: "Se ha agregado al administrador", user, admin });
     }
     else {

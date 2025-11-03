@@ -105,6 +105,44 @@ actions.eliminarPlaza = async (req, res) => {
     }
 }
 
+actions.editarPlaza = async (req, res) => {
+    const { idPlaza, beca, carrera, programa, promocion, sede, tarjeta, tk, ubicacion } = req.body;
+    try {
+        if(tk){
+            const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+            const plazaActualizada = await prisma.Plaza.update({
+                where: { ID: parseInt(idPlaza) },
+                data: {
+                    tipoBeca: beca,
+                    carrera: carrera,
+                    promocion: promocion,
+                    sede: sede,
+                    tarjetaDisponible: tarjeta,
+                    ubicacion: ubicacion,
+                    estatus: 1,
+                    PROGRAMA: programa
+                }
+            });
+            if (plazaActualizada) {
+                res.json({ error: 0, message: "Plaza actualizada", plazaActualizada });
+            } else {
+                res.json({ error: 1, message: "Error al actualizar plaza" });
+            }
+        }else{
+            res.json({ error: 1, message: "Token requerido" });
+        }
+    } catch (error) {
+        console.log(error);
+        if (error.message === 'TOKEN_EXPIRED') {
+            return res.json({ error: 1, message: "Token expirado" });
+        } else if (error.message === 'INVALID_TOKEN') {
+            return res.json({ error: 1, message: "Token inválido" });
+        } else {
+            return res.json({ error: 1, message: "Error al confirmar usuario" });
+        }
+    }
+}
+
 actions.asignarPlaza = async (req, res) => {
     const { idPlaza, idUsuario, tk } = req.body;  
       try {
