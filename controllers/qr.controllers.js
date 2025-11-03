@@ -67,5 +67,26 @@ actions.registrarQr= async (req, res) => {
       }
 }
 
+actions.obtenerRegistrosQr= async (req, res) => {
+    const {tk} = req.query;
+      try {
+        if(tk){
+            const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+            const registros = await prisma.codigoQr.findMany({});
+              res.json({ error: 0, message: "Registros obtenidos", registros });
+        }else{
+          res.json({ error: 1, message: "Token requerido" });
+        }
+      } catch (error) {
+        console.log(error);
+        if (error.message === 'TOKEN_EXPIRED') {
+          return res.json({ error: 1, message: "Token expirado" });
+        } else if (error.message === 'INVALID_TOKEN') {
+          return res.json({ error: 1, message: "Token inválido" });
+        } else {
+          return res.json({ error: 1, message: "Error del servidor" });
+        }
+      }
+}
 
 module.exports = actions

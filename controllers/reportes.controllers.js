@@ -111,6 +111,22 @@ actions.obtenerTodosReportes = async (req, res) => {
                   select: { nombre: true, APELLIDO_PATERNO: true, APELLIDO_MATERNO: true }
                 });
               }
+
+              const persona = await prisma.Persona.findUnique({
+                where: { boleta: reporte.alumnoBoleta },
+                select: { nombre: true, APELLIDO_PATERNO: true, APELLIDO_MATERNO: true }
+              });
+              const alumno = await prisma.Alumno.findUnique({
+                where: { boleta: reporte.alumnoBoleta },
+                select: { carrera: true, generacion: true }
+              });
+              reporte.alumnoNombre = persona.nombre + ' ' + persona.APELLIDO_PATERNO + ' ' + persona.APELLIDO_MATERNO;
+              const carrera = await prisma.CARRERA.findUnique({
+                where: { ID: alumno.carrera },
+                select: { NOMBRE: true }
+              }); 
+              reporte.alumnoGeneracion = alumno.generacion; 
+              reporte.alumnoCarrera = carrera.NOMBRE;
             }
             const fullreportes = [];
             if (reportes) {
@@ -127,7 +143,6 @@ actions.obtenerTodosReportes = async (req, res) => {
                   return { ...reporte, evidencias,observaciones};
                 })
               );
-              console.log(fullreportes);
               res.json({ error: 0, message: "Datos", fullreportes });
             } else {
               res.json({ error: 1, message: "Error al obtener reportes" });

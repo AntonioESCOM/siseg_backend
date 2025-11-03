@@ -17,7 +17,7 @@ actions.loginUser = async (req, res) => {
 
   try {
     const user = await prisma.Persona.findUnique({ where: { boleta } });
-    if (user && user.contrasena == password) {
+    if (user && bcrypt.compare(password, user.contrasena)) {
       let token;
       if(user.rol == "ALUMNO"){
         const alumnoProfile = await prisma.Alumno.findUnique({ where: { boleta: user.boleta } });
@@ -49,7 +49,7 @@ actions.loginUser = async (req, res) => {
 };
 
 actions.refreshToken = async (req, res) => {
-  const { tk } = req.body;
+  const { tk } = req.query;
   try {
     const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
     const newToken = jwt.sign(
@@ -178,16 +178,26 @@ actions.restablecerPassword = async (req, res) => {
   const { password, tk } = req.body;
   try {
     if (tk) {
-      bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) {
-          res.json({ error: 1, message: "Error al encriptar contraseña" });
-        } 
-      });
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
-      await prisma.Persona.update({
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const persona = await prisma.Persona.update({
         where: { boleta: payload.id },
         data: { contrasena: hashedPassword },
       });
+      if (persona.rol == "ALUMNO") {
+        console.log("alumno");
+        await prisma.Alumno.update({
+          where: { boleta: payload.id },
+          data: { estatus: 1 },
+        });
+      }else {
+        console.log("admin");
+        await prisma.PAdmin.update({
+          where: { boleta: payload.id },
+          data: { estatus: 1 },
+        });
+      }
       res.json({ error: 0, message: "Se ha restablecido la contraseña" });
     } else {
       res.json({ error: 1, message: "Token requerido" });
