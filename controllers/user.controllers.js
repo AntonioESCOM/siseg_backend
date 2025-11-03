@@ -18,13 +18,25 @@ actions.loginUser = async (req, res) => {
   try {
     const user = await prisma.Persona.findUnique({ where: { boleta } });
     if (user && user.contrasena == password) {
-      const token = jwt.sign(
-        { id: user.boleta, username: user.nombre, rol: user.rol },
-        process.env.SECRET_KEY,
-        {
-          expiresIn: "1h",
-        }
-      );
+      let token;
+      if(user.rol == "ALUMNO"){
+        token = jwt.sign(
+          { id: user.boleta, username: user.nombre, rol: user.rol },
+          process.env.SECRET_KEY,
+          {
+            expiresIn: "1h",
+          }
+        );
+      } else {
+        const adminProfile = await prisma.PAdmin.findUnique({ where: { boleta: user.boleta } });
+        token = jwt.sign(
+          { id: user.boleta, username: user.nombre, rol: user.rol, perfil: adminProfile.perfil, estatus: adminProfile.estatus },
+          process.env.SECRET_KEY,
+          {
+            expiresIn: "1h",
+          }
+        );
+      }
       res.json({ error: 0, message: "Inicio de sesión exitoso", token });
     } else {
       res.json({ error: 1, message: "Credenciales incorrectas" });
@@ -130,15 +142,15 @@ actions.restablecerPasswordEmail = async (req, res) => {
         { expiresIn: "15m" }
       );
       const verifyUrl =
-        process.env.FRONT_END_URL + `nueva-contrasena?tk=${token}`;
-      let emailContent = await fs.readFile(
+      process.env.FRONT_END_URL + `/nueva-contrasena?tk=${token}`;
+       let emailContent = await fs.readFile(
         "./templates/recoverPasswordTemplate.html",
         "utf8"
       );
       emailContent = emailContent.replace(/\$url/g, verifyUrl);
       await sendEmail({
         to: email,
-        subject: "Restablecer Contraseña",
+        subject: "Verificación de la cuenta",
         html: emailContent,
       });
       res.json({
@@ -450,10 +462,8 @@ actions.subirArchivo = async (req, res) => {
           .send({ message: "No se ha enviado ningún archivo" });
       }
 
-      // Nombre lógico para identificar el documento (el que tú quieras usar como “clave” junto con alumnoBoleta)
+    
       const nombreLogico = (nombre?.trim?.() || req.file.originalname).trim();
-
-      // Ruta real según cómo lo guardó Multer en el servidor
       const ruta = `${process.env.BASE_URL}/uploads/${payload.id}/${req.file.filename}`;
 
       // 1) Buscar si ya existe un expediente con el mismo alumnoBoleta + nombreArchivo
@@ -473,6 +483,7 @@ actions.subirArchivo = async (req, res) => {
           data: {
             estatus: 2,
             rutaArchivo: ruta,
+            fechaRegistro: new Date(),
           },
         });
         message = "Archivo actualizado exitosamente";

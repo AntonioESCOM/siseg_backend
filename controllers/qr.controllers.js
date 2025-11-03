@@ -66,4 +66,6 @@ actions.registrarQr= async (req, res) => {
         }
       }
 }
+
+
 module.exports = actions

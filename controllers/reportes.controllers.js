@@ -103,7 +103,7 @@ actions.obtenerTodosReportes = async (req, res) => {
         try {
         if(tk){
             const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
-            const reportes = await prisma.Reporte.findMany(); 
+            const reportes = await prisma.Reporte.findMany({ orderBy: { fechaRegistro: 'desc' } });
             for (let reporte of reportes) {
               if (reporte.adminEncargado) {
                 reporte.adminEncargado = await prisma.Persona.findUnique({
