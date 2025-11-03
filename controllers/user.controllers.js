@@ -20,8 +20,9 @@ actions.loginUser = async (req, res) => {
     if (user && user.contrasena == password) {
       let token;
       if(user.rol == "ALUMNO"){
+        const alumnoProfile = await prisma.Alumno.findUnique({ where: { boleta: user.boleta } });
         token = jwt.sign(
-          { id: user.boleta, username: user.nombre, rol: user.rol },
+          { id: user.boleta, username: user.nombre, rol: user.rol, estatus: alumnoProfile.estatus },
           process.env.SECRET_KEY,
           {
             expiresIn: "1h",
