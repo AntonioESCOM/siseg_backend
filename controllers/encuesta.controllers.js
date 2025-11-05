@@ -99,4 +99,32 @@ actions.obtenerFechaUltimaEncuesta = async (req, res) => {
     }
 }
 
+actions.obtenerEncuestaAlumnos = async (req, res) => {
+    const {tk} = req.query;
+        try {
+        if(tk){
+            const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+            const encuestas = await prisma.Encuesta.findMany({  
+                orderBy: { fechaRegistro: 'asc' }
+            }); 
+            if (encuestas) {
+              res.json({ error: 0, message: "Datos", encuestas });
+            } else {
+              res.json({ error: 1, message: "No se encontraron encuestas" });
+            }   
+        }else{
+            res.json({ error: 1, message: "Token requerido" });
+        }
+    } catch (error) {
+        console.log(error);
+        if (error.message === 'TOKEN_EXPIRED') {
+            return res.json({ error: 1, message: "Token expirado" });
+        } else if (error.message === 'INVALID_TOKEN') {
+            return res.json({ error: 1, message: "Token inválido" });
+        } else {
+            return res.json({ error: 1, message: "Error en el sistema" });
+        }
+    }
+}
+
 module.exports = actions;
