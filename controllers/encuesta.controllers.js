@@ -42,12 +42,12 @@ actions.agregarEncuesta = async (req, res) => {
 }
 
 actions.obtenerEncuestaAlumno = async (req, res) => {
-    const {tk} = req.query;
+    const {boleta,tk} = req.query;
         try {
         if(tk){
             const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
             const encuesta = await prisma.Encuesta.findFirst({  
-                where: { alumnoBoleta: payload.id },
+                where: { alumnoBoleta: boleta },
                 orderBy: { alumnoBoleta: 'asc' }
             }); 
             if (encuesta) {
@@ -71,12 +71,12 @@ actions.obtenerEncuestaAlumno = async (req, res) => {
 }
 
 actions.obtenerFechaUltimaEncuesta = async (req, res) => {
-    const {tk} = req.query;
+    const {boleta, tk} = req.query;
     try {
         if(tk){
             const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
             const encuesta = await prisma.Encuesta.findFirst({
-                where: { alumnoBoleta: payload.id },
+                where: { alumnoBoleta: boleta },
                 orderBy: { fechaRegistro: 'desc' }
             });
             if (encuesta) {
