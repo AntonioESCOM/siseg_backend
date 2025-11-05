@@ -27,5 +27,6 @@ router.post('/editarAdmin', actionsUser.editarAdmin);
 router.post('/desactivarAdmin', actionsUser.desactivarAdmin);
 router.post('/validarExpediente', actionsUser.validarExpediente);
 router.get('/refreshToken', actionsUser.refreshToken);
+router.get('/obtenerDetallesAlumnoPorBoleta', actionsUser.obtenerDetallesAlumnoPorBoleta);
 
 module.exports = router
