@@ -1204,7 +1204,7 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
 };
 
 actions.obtenerDetallesAlumnoPorBoleta = async (req, res) => {
-  const { tk, boleta } = req.query;
+  const { boleta,tk } = req.query;
   try {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
