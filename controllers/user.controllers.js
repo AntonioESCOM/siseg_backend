@@ -1154,7 +1154,102 @@ actions.validarExpediente = async (req, res) => {
   }
 };
 
+actions.obtenerTodosDatosAlumno = async (req, res) => {
+  const { tk } = req.query;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const user = await prisma.Persona.findUnique({
+        where: { boleta: payload.id },
+        include: { alumno: true },
+      });
+      const carrera = await prisma.CARRERA.findUnique({
+        where: { ID: user.alumno.carrera },
+      });
+      const direccion = await prisma.Direccion.findUnique({
+        where: { alumnoBoleta: payload.id },
+      });
+      if (user) {
+        const data = {
+          boleta: user.boleta,
+          correo: user.correo,
+          curp: user.curp,
+          rfc: user.alumno.rfc,
+          nombre: user.nombre,
+          apellido_paterno: user.APELLIDO_PATERNO,
+          apellido_materno: user.APELLIDO_MATERNO,
+          generacion: user.alumno.generacion,
+          promedio: user.alumno.promedio,
+          carrera: carrera.NOMBRE,
+          calle_y_numero: direccion.calle,
+          colonia: direccion.colonia,
+          delegacion: direccion.delegacionMunicipio,
+          estado: direccion.estado,
+          cp: direccion.cp,
+          sexo: user.sexo,
+          telcelular: user.telefonoMovil,
+          tellocal: user.telefonoFijo,
+        };
+        res.json({ error: 0, message: "Datos", data });
+      } else {
+        res.json({ error: 1, message: "Usuario no encontrado" });
+      }
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ error: 1, message: "Token expirado" });
+  }
+};
 
-
+actions.obtenerDetallesAlumnoPorBoleta = async (req, res) => {
+  const { tk, boleta } = req.query;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const user = await prisma.Persona.findUnique({
+        where: { boleta: boleta},
+        include: { alumno: true },
+      });
+      const carrera = await prisma.CARRERA.findUnique({
+        where: { ID: user.alumno.carrera },
+      });
+      const direccion = await prisma.Direccion.findUnique({
+        where: { alumnoBoleta: payload.id },
+      });
+      if (user) {
+        const data = {
+          boleta: user.boleta,
+          correo: user.correo,
+          curp: user.curp,
+          rfc: user.alumno.rfc,
+          nombre: user.nombre,
+          apellido_paterno: user.APELLIDO_PATERNO,
+          apellido_materno: user.APELLIDO_MATERNO,
+          generacion: user.alumno.generacion,
+          promedio: user.alumno.promedio,
+          carrera: carrera.NOMBRE,
+          calle_y_numero: direccion.calle,
+          colonia: direccion.colonia,
+          delegacion: direccion.delegacionMunicipio,
+          estado: direccion.estado,
+          cp: direccion.cp,
+          sexo: user.sexo,
+          telcelular: user.telefonoMovil,
+          tellocal: user.telefonoFijo,
+        };
+        res.json({ error: 0, message: "Datos", data });
+      } else {
+        res.json({ error: 1, message: "Usuario no encontrado" });
+      }
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ error: 1, message: "Token expirado" });
+  }
+};
 
 module.exports = actions;
