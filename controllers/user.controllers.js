@@ -1216,7 +1216,7 @@ actions.obtenerDetallesAlumnoPorBoleta = async (req, res) => {
         where: { ID: user.alumno.carrera },
       });
       const direccion = await prisma.Direccion.findUnique({
-        where: { alumnoBoleta: boletaj },
+        where: { alumnoBoleta: boleta },
       });
       if (user) {
         const data = {
