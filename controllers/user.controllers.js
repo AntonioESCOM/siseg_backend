@@ -17,7 +17,8 @@ actions.loginUser = async (req, res) => {
 
   try {
     const user = await prisma.Persona.findUnique({ where: { boleta } });
-    if (user && bcrypt.compare(password, user.contrasena)) {
+    const ok = await bcrypt.compare(password, user.contrasena);
+    if (user && ok) {
       let token;
       if(user.rol == "ALUMNO"){
         const alumnoProfile = await prisma.Alumno.findUnique({ where: { boleta: user.boleta } });
@@ -786,7 +787,7 @@ actions.agregarAlumno = async (req, res) => {
           estatus: estatus
         }
       });
-      res.json({ error: 0, message: "Se ha agregado al alumno", user, alumno });
+      res.json({ error: 0, message: "Se ha agregado al alumno", alumno });
     } else {
       res.json({ error: 1, message: "Faltan parámetros" });
     }
@@ -962,7 +963,6 @@ actions.agregarAdmin = async (req, res) => {
     apellido_paterno,
     correo,
     curp,
-    estatus,
     nombre,
     numempleado,
     perfil,
@@ -997,7 +997,7 @@ actions.agregarAdmin = async (req, res) => {
       const admin = await prisma.PAdmin.create({
         data: {
           boleta: numempleado,
-          perfil: perfil,
+          perfil: parseInt(perfil),
           estatus: 0
         }
       });
@@ -1013,8 +1013,7 @@ actions.agregarAdmin = async (req, res) => {
         subject: "Credenciales de acceso",
         html: emailContent,
       });
-      console.log(`Contraseña temporal para ${numempleado}: ${randomPassword}`);
-      res.json({ error: 0, message: "Se ha agregado al administrador", user, admin });
+      res.json({ error: 0, message: "Se ha agregado al administrador", admin });
     }
     else {
       res.json({ error: 1, message: "Faltan parámetros" });
