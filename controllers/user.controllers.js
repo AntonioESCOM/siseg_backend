@@ -53,12 +53,27 @@ actions.refreshToken = async (req, res) => {
   const { tk } = req.query;
   try {
     const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
-    const newToken = jwt.sign(
-      { id: payload.id, username: payload.username, rol: payload.rol },
-      process.env.SECRET_KEY,
-      { expiresIn: "1h" }
-    );
-    res.json({ error: 0, message: "Token renovado", token: newToken });
+    const user = await prisma.Persona.findUnique({ where: { boleta: payload.id } });
+    if(user.rol == "ALUMNO"){
+      const alumnoProfile = await prisma.Alumno.findUnique({ where: { boleta: user.boleta } });
+      token = jwt.sign(
+        { id: user.boleta, username: user.nombre, rol: user.rol, estatus: alumnoProfile.estatus },
+        process.env.SECRET_KEY,
+        {
+          expiresIn: "1h",
+        }
+      );
+    } else {
+      const adminProfile = await prisma.PAdmin.findUnique({ where: { boleta: user.boleta } });
+      token = jwt.sign(
+        { id: user.boleta, username: user.nombre, rol: user.rol, perfil: adminProfile.perfil, estatus: adminProfile.estatus },
+        process.env.SECRET_KEY,
+        {
+          expiresIn: "1h",
+        }
+      );
+    }
+    res.json({ error: 0, message: "Token renovado", token: token });
   } catch (error) {
     console.log(error);
     if (error.message === "TOKEN_EXPIRED") {

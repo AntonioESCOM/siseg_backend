@@ -46,7 +46,7 @@ actions.chatbotQuery = async (req, res) => {
             Instrucción Estricta: Eres un asistente experto en el documento de servicio social.
             Tu tarea es responder la pregunta del usuario basándote ÚNICA Y EXCLUSIVAMENTE en el siguiente CONTEXTO.
             No puedes usar ningún conocimiento externo.
-            Si la respuesta no se encuentra en el CONTEXTO, debes decir: "No encontré la información en el documento."
+            Si la respuesta no se encuentra en el CONTEXTO, debes decir: "No tengo respuesta para la pregunta."
 
             CONTEXTO:
             ${context}
