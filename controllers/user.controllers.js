@@ -319,6 +319,7 @@ actions.completarRegistro = async (req, res) => {
             estado: estado,
           },
         });
+        const user = await prisma.Persona.findUnique({ where: { boleta: payload.id } });
         const loginUrl = process.env.FRONT_END_URL + `/iniciar-sesion`;
         let emailContent = await fs.readFile(
           "./templates/sendCredentials.html",
@@ -327,7 +328,7 @@ actions.completarRegistro = async (req, res) => {
         emailContent = emailContent.replace(/\$loginUrl/g, loginUrl);
         emailContent = emailContent.replace(/\$tempPassword/g, randomPassword);
         await sendEmail({
-          to: correo,
+          to: user.correo,
           subject: "Credenciales de acceso",
           html: emailContent,
         });
