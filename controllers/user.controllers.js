@@ -411,26 +411,26 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
         where: { alumnoBoleta: payload.id },
       });
       if (user) {
-        const data = {
-          boleta: user.boleta,
-          correo: user.correo,
-          curp: user.curp,
-          rfc: user.alumno.rfc,
-          nombre: user.nombre,
-          apellido_paterno: user.APELLIDO_PATERNO,
-          apellido_materno: user.APELLIDO_MATERNO,
-          generacion: user.alumno.generacion,
-          promedio: user.alumno.promedio,
-          carrera: carrera.NOMBRE,
-          calle_y_numero: direccion.calle,
-          colonia: direccion.colonia,
-          delegacion: direccion.delegacionMunicipio,
-          estado: direccion.estado,
-          cp: direccion.cp,
-          sexo: user.sexo,
-          telcelular: user.telefonoMovil,
-          tellocal: user.telefonoFijo,
-        };
+      const data = {
+        boleta: user?.boleta || "",
+        correo: user?.correo || "",
+        curp: user?.curp || "",
+        rfc: user?.alumno?.rfc || "",
+        nombre: user?.nombre || "",
+        apellido_paterno: user?.APELLIDO_PATERNO || "",
+        apellido_materno: user?.APELLIDO_MATERNO || "",
+        generacion: user?.alumno?.generacion || "",
+        promedio: user?.alumno?.promedio || "",
+        carrera: carrera?.NOMBRE || "",
+        calle_y_numero: direccion?.calle || "",
+        colonia: direccion?.colonia || "",
+        delegacion: direccion?.delegacionMunicipio || "",
+        estado: direccion?.estado || "",
+        cp: direccion?.cp || "",
+        sexo: user?.sexo || "",
+        telcelular: user?.telefonoMovil || "",
+        tellocal: user?.telefonoFijo || "",
+      };
         res.json({ error: 0, message: "Datos", data });
       } else {
         res.json({ error: 1, message: "Usuario no encontrado" });
