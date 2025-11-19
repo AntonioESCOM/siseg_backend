@@ -242,7 +242,7 @@ actions.getValidarDatos = async (req, res) => {
       const carrera = await prisma.CARRERA.findUnique({
         where: { ID: user.alumno.carrera },
       });
-      if (user) {
+      if (user ) {
         const data = {
           boleta: user.boleta,
           correo: user.correo,
@@ -410,7 +410,7 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
       const direccion = await prisma.Direccion.findUnique({
         where: { alumnoBoleta: payload.id },
       });
-      if (user) {
+      if (user && carrera && direccion) {
       const data = {
         boleta: user?.boleta || "",
         correo: user?.correo || "",
@@ -1204,7 +1204,7 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
       const direccion = await prisma.Direccion.findUnique({
         where: { alumnoBoleta: payload.id },
       });
-      if (user) {
+      if (user && carrera && direccion) {
         const data = {
           boleta: user.boleta,
           correo: user.correo,
@@ -1227,7 +1227,7 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
         };
         res.json({ error: 0, message: "Datos", data });
       } else {
-        res.json({ error: 1, message: "Usuario no encontrado" });
+        res.json({ error: 1, message: "Hubo problema on alguno de los campos del perfil, por favor ponte en contacto con el administrador" });
       }
     } else {
       res.json({ error: 1, message: "Token requerido" });
@@ -1253,7 +1253,7 @@ actions.obtenerDetallesAlumnoPorBoleta = async (req, res) => {
       const direccion = await prisma.Direccion.findUnique({
         where: { alumnoBoleta: boleta },
       });
-      if (user) {
+      if (user && carrera && direccion) {
         const data = {
           boleta: user.boleta,
           correo: user.correo,
@@ -1276,7 +1276,7 @@ actions.obtenerDetallesAlumnoPorBoleta = async (req, res) => {
         };
         res.json({ error: 0, message: "Datos", data });
       } else {
-        res.json({ error: 1, message: "Usuario no encontrado" });
+        res.json({ error: 1, message: "Hubo problema on alguno de los campos del perfil, por favor ponte en contacto con el administrador" });
       }
     } else {
       res.json({ error: 1, message: "Token requerido" });
