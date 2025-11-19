@@ -294,9 +294,11 @@ actions.completarRegistro = async (req, res) => {
       tk)
     ) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const randomPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
       await prisma.Persona.update({
         where: { boleta: payload.id },
-        data: { sexo: sexo, telefonoMovil: telcelular, telefonoFijo: tellocal },
+        data: { contrasena: hashedPassword, sexo: sexo, telefonoMovil: telcelular, telefonoFijo: tellocal },
       });
       await prisma.Alumno.update({
         where: { boleta: payload.id },
@@ -316,6 +318,18 @@ actions.completarRegistro = async (req, res) => {
             cp: cp,
             estado: estado,
           },
+        });
+        const loginUrl = process.env.FRONT_END_URL + `/iniciar-sesion`;
+        let emailContent = await fs.readFile(
+          "./templates/sendCredentials.html",
+          "utf8"
+        );
+        emailContent = emailContent.replace(/\$loginUrl/g, loginUrl);
+        emailContent = emailContent.replace(/\$tempPassword/g, randomPassword);
+        await sendEmail({
+          to: correo,
+          subject: "Credenciales de acceso",
+          html: emailContent,
         });
       res.json({ error: 0, message: "Se ha completado el registro" });
     } else {
@@ -992,23 +1006,23 @@ actions.agregarAdmin = async (req, res) => {
       if(await prisma.Persona.findUnique({ where: { boleta: numempleado }}) != undefined){
         return res.json({ error: 1, message: "El número de empleado ya está registrado" });
       } 
-      const randomPassword = Math.random().toString(36).slice(-8);
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
-      const user = await prisma.Persona.create({
-        data: {
-          boleta: numempleado,
-          contrasena: hashedPassword,
-          correo: correo,
-          curp: curp,
-          nombre: nombre,
-          APELLIDO_PATERNO: apellido_paterno,
-          APELLIDO_MATERNO:apellido_materno,
-          sexo: sexo,
-          telefonoMovil: telcelular,
-          telefonoFijo: tellocal,
-          rol: "P_ADMIN"
-        }
-      });
+        const randomPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        const user = await prisma.Persona.create({
+          data: {
+            boleta: numempleado,
+            contrasena: hashedPassword,
+            correo: correo,
+            curp: curp,
+            nombre: nombre,
+            APELLIDO_PATERNO: apellido_paterno,
+            APELLIDO_MATERNO:apellido_materno,
+            sexo: sexo,
+            telefonoMovil: telcelular,
+            telefonoFijo: tellocal,
+            rol: "P_ADMIN"
+          }
+        });
       const admin = await prisma.PAdmin.create({
         data: {
           boleta: numempleado,
