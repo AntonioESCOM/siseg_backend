@@ -440,7 +440,13 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.json({ error: 1, message: "Token expirado" });
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {  
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
   }
 };
 
