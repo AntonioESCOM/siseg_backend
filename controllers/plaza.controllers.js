@@ -148,6 +148,14 @@ actions.asignarPlaza = async (req, res) => {
       try {
         if(tk){
             const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+            const plazaExistente = await prisma.Plaza.findUnique({
+                where: {  
+                    ID: parseInt(idPlaza)
+                }
+            });
+            if(plazaExistente.tarjetaDisponible <= 0){
+                return  res.json({ error: 1, message: "No hay tarjetas disponibles en esta plaza" });
+            }
             const plazaAsignada = await prisma.Alumno.update({
                 where: {  
                     boleta: idUsuario
@@ -155,12 +163,20 @@ actions.asignarPlaza = async (req, res) => {
                 data: {
                     sede: parseInt(idPlaza)
                 }
-              });
-                if (plazaAsignada) {
-                    res.json({ error: 0, message: "Plaza asignada", plazaAsignada });
-                } else {
-                    res.json({ error: 1, message: "Error al asignar plaza" });
-                } 
+            });
+            const actualizarPlaza = await prisma.Plaza.update({
+                where: {  
+                    ID: parseInt(idPlaza)
+                },
+                data: {
+                    tarjetaDisponible: plazaExistente.tarjetaDisponible - 1
+                }
+            });
+            if (plazaAsignada) {
+                res.json({ error: 0, message: "Plaza asignada", plazaAsignada });
+            } else {
+                res.json({ error: 1, message: "Error al asignar plaza" });
+            } 
         }else{
             res.json({ error: 1, message: "Token requerido" });
         }
