@@ -72,7 +72,7 @@ actions.obtenerRegistrosQr= async (req, res) => {
       try {
         if(tk){
             const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
-            const registros = await prisma.codigoQr.findMany({});
+            const registros = await prisma.CodigoQr.findMany({});
               res.json({ error: 0, message: "Registros obtenidos", registros });
         }else{
           res.json({ error: 1, message: "Token requerido" });
