@@ -9,19 +9,18 @@ datasource db {
 
 /// ========== PERSONA ==========
 model Persona {
-  boleta           String     @id @map("BOLETA") @db.VarChar(12)
-  correo           String?    @unique(map: "CORREO") @map("CORREO") @db.VarChar(50)
-  curp             String?    @unique(map: "CURP") @map("CURP") @db.VarChar(18)
-  contrasena       String?    @map("CONTRASENA") @db.VarChar(255)
-  nombre           String?    @map("NOMBRE") @db.VarChar(255)
-  APELLIDO_PATERNO String?    @db.VarChar(255)
-  APELLIDO_MATERNO String?    @db.VarChar(255)
-  rol              Rol        @map("ROL")
-  sexo             String?    @map("SEXO") @db.Char(1)
-  telefonoMovil    String?    @map("TELEFONO_MOVIL") @db.VarChar(10)
-  telefonoFijo     String?    @map("TELEFONO_FIJO") @db.VarChar(10)
+  boleta           String  @id @map("BOLETA") @db.VarChar(12)
+  correo           String? @unique(map: "CORREO") @map("CORREO") @db.VarChar(50)
+  curp             String? @unique(map: "CURP") @map("CURP") @db.VarChar(18)
+  contrasena       String? @map("CONTRASENA") @db.VarChar(255)
+  nombre           String? @map("NOMBRE") @db.VarChar(255)
+  APELLIDO_PATERNO String? @db.VarChar(255)
+  APELLIDO_MATERNO String? @db.VarChar(255)
+  rol              Rol     @map("ROL")
+  sexo             String? @map("SEXO") @db.Char(1)
+  telefonoMovil    String? @map("TELEFONO_MOVIL") @db.VarChar(10)
+  telefonoFijo     String? @map("TELEFONO_FIJO") @db.VarChar(10)
   alumno           Alumno?
-  bitacoras        Bitacora[]
   pAdmin           PAdmin?
 
   @@map("PERSONA")
@@ -58,7 +57,7 @@ model Alumno {
   plaza                           Plaza?          @relation(fields: [sede], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "ALUMNO_ibfk_2")
   CARRERA_ALUMNO_CARRERAToCARRERA CARRERA?        @relation("ALUMNO_CARRERAToCARRERA", fields: [carrera], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "ALUMNO_ibfk_3")
   ESTATUS_ALUMNO                  ESTATUS_ALUMNO? @relation(fields: [estatus], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "ALUMNO_ibfk_4")
-  codigosQr                       CodigoQr[]
+  codigosQr                       CodigoQr?
   direccion                       Direccion?
   encuestas                       Encuesta[]
   expediente                      Expediente[]
@@ -99,25 +98,12 @@ model PAdmin {
   @@map("P_ADMIN")
 }
 
-/// ========== BITACORA ==========
-model Bitacora {
-  id             Int       @id @default(autoincrement()) @map("ID")
-  accion         String?   @map("ACCION") @db.VarChar(40)
-  boletaPersona  String?   @map("BOLETA") @db.VarChar(12)
-  fechaEjecucion DateTime? @map("FECHA_EJECUCION") @db.DateTime(0)
-  persona        Persona?  @relation(fields: [boletaPersona], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "BITACORA_ibfk_1")
-
-  @@index([boletaPersona], map: "BOLETA")
-  @@map("BITACORA")
-}
-
 /// ========== CODIGO_QR ==========
 model CodigoQr {
   id             Int       @id @default(autoincrement()) @map("ID")
   adminEncargado String?   @map("ADMIN_ENCARGADO") @db.VarChar(12)
-  alumnoBoleta   String?   @map("ALUMNO") @db.VarChar(12)
+  alumnoBoleta   String?   @unique(map: "ALUMNO_UNIQUE") @map("ALUMNO") @db.VarChar(12)
   fechaLectura   DateTime? @map("FECHA_LECTURA") @db.DateTime(0)
-  qr             String?   @map("QR") @db.VarChar(255)
   alumno         Alumno?   @relation(fields: [alumnoBoleta], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "CODIGO_QR_ibfk_1")
   admin          PAdmin?   @relation(fields: [adminEncargado], references: [boleta], onDelete: NoAction, onUpdate: NoAction, map: "CODIGO_QR_ibfk_2")
 

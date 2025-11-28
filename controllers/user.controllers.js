@@ -622,7 +622,7 @@ actions.obtenerPlazaAsignada = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.json({ error: 1, message: "Token expirado" });
+    res.json({ error: 1, message: "Hubo un error en el servidor" });
   }
 };
 
