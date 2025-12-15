@@ -4,6 +4,7 @@ let cachedTransporter;
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 /**
  * Crea/recupera un transporter único (evita recrearlo en hot-reload).
@@ -97,4 +98,46 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-module.exports = { getTransporter, sendEmail,verifyTokenWithErrorHandling,upload };
+const tokenStore = new Map(); // Almacén en RAM
+function createOneTimeToken(data, minutes = 15) {
+    const token = crypto.randomBytes(32).toString('hex');
+    tokenStore.set(token, {
+        data,
+        expires: Date.now() + (minutes * 60 * 1000)
+    });
+    return token;
+}
+
+/**
+ * Valida, recupera los datos y ELIMINA el token (se quema).
+ * Retorna null si es inválido o expiró.
+ */
+function consumeOneTimeToken(token) {
+    if (!tokenStore.has(token)) return null;
+
+    const record = tokenStore.get(token);
+    
+    // Validar expiración (por si el Garbage Collector no ha pasado aún)
+    if (Date.now() > record.expires) {
+        tokenStore.delete(token);
+        return null;
+    }
+
+    // BORRAR EL TOKEN (Aquí ocurre la magia de un solo uso)
+    tokenStore.delete(token);
+    
+    return record.data;
+}
+
+// Limpieza automática de memoria (Garbage Collector simple)
+// Se ejecuta cada 5 minutos para borrar tokens viejos que nadie usó
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of tokenStore.entries()) {
+        if (now > value.expires) {
+            tokenStore.delete(key);
+        }
+    }
+}, 5 * 60 * 1000);
+
+module.exports = { getTransporter, sendEmail,verifyTokenWithErrorHandling,upload,createOneTimeToken,consumeOneTimeToken };

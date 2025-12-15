@@ -5,6 +5,8 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const { sendEmail } = require("../helpers/general_helper");
 const { verifyTokenWithErrorHandling } = require("../helpers/general_helper");
+const {createOneTimeToken} = require("../helpers/general_helper");
+const {consumeOneTimeToken} = require("../helpers/general_helper");
 const { upload } = require("../helpers/general_helper");
 const fs = require("fs").promises;
 const path = require("path");
@@ -92,11 +94,7 @@ actions.verificarCandidato = async (req, res) => {
   try {
     const user = await prisma.Persona.findUnique({ where: { correo } });
     if (user) {
-      const token = jwt.sign(
-        { id: user.boleta, username: user.nombre },
-        process.env.SECRET_KEY,
-        { expiresIn: "1h" }
-      );
+      const token = createOneTimeToken({ id: user.boleta, username: user.nombre});
       const verifyUrl = process.env.FRONT_END_URL + `/completar-registro?tk=${token}`;
       let emailContent = await fs.readFile(
         "./templates/confirmAccount.html",
@@ -153,11 +151,7 @@ actions.restablecerPasswordEmail = async (req, res) => {
   try {
     const user = await prisma.Persona.findUnique({ where: { correo } });
     if (user) {
-      const token = jwt.sign(
-        { id: user.boleta, username: user.nombre },
-        process.env.SECRET_KEY,
-        { expiresIn: "15m" }
-      );
+      const token = createOneTimeToken({ id: user.boleta, username: user.nombre});
       const verifyUrl =
       process.env.FRONT_END_URL + `/nueva-contrasena?tk=${token}`;
        let emailContent = await fs.readFile(
@@ -194,7 +188,7 @@ actions.restablecerPassword = async (req, res) => {
   const { password, tk } = req.body;
   try {
     if (tk) {
-      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const payload = consumeOneTimeToken(tk);
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const persona = await prisma.Persona.update({
@@ -233,8 +227,8 @@ actions.restablecerPassword = async (req, res) => {
 actions.getValidarDatos = async (req, res) => {
   const { tk } = req.query;
   try {
-    if (tk) {
-      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+    const payload = consumeOneTimeToken(tk);
+    if (tk && payload) {
       const user = await prisma.Persona.findUnique({
         where: { boleta: payload.id },
         include: { alumno: true },
