@@ -430,7 +430,7 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
         res.json({ error: 1, message: "Usuario no encontrado" });
       }
     } else {
-      res.json({ error: 1, message: "Token requerido" });
+      res.json({ error: 1, message: "Hubo problema on alguno de los campos del perfil, por favor ponte en contacto con el administrador"});
     }
   } catch (error) {
     console.log(error);
@@ -1180,55 +1180,6 @@ actions.validarExpediente = async (req, res) => {
     } else {
       return res.json({ error: 1, message: "Error al validar expediente" });
     }
-  }
-};
-
-actions.obtenerTodosDatosAlumno = async (req, res) => {
-  const { tk } = req.query;
-  try {
-    if (tk) {
-      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
-      const user = await prisma.Persona.findUnique({
-        where: { boleta: payload.id },
-        include: { alumno: true },
-      });
-      const carrera = await prisma.CARRERA.findUnique({
-        where: { ID: user.alumno.carrera },
-      });
-      const direccion = await prisma.Direccion.findUnique({
-        where: { alumnoBoleta: payload.id },
-      });
-      if (user && carrera && direccion) {
-        const data = {
-          boleta: user.boleta,
-          correo: user.correo,
-          curp: user.curp,
-          rfc: user.alumno.rfc,
-          nombre: user.nombre,
-          apellido_paterno: user.APELLIDO_PATERNO,
-          apellido_materno: user.APELLIDO_MATERNO,
-          generacion: user.alumno.generacion,
-          promedio: user.alumno.promedio,
-          carrera: carrera.NOMBRE,
-          calle_y_numero: direccion.calle,
-          colonia: direccion.colonia,
-          delegacion: direccion.delegacionMunicipio,
-          estado: direccion.estado,
-          cp: direccion.cp,
-          sexo: user.sexo,
-          telcelular: user.telefonoMovil,
-          tellocal: user.telefonoFijo,
-        };
-        res.json({ error: 0, message: "Datos", data });
-      } else {
-        res.json({ error: 1, message: "Hubo problema on alguno de los campos del perfil, por favor ponte en contacto con el administrador" });
-      }
-    } else {
-      res.json({ error: 1, message: "Token requerido" });
-    }
-  } catch (error) {
-    console.log(error);
-    res.json({ error: 1, message: "Token expirado" });
   }
 };
 
