@@ -3,10 +3,11 @@ const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
-const { sendEmail } = require("../helpers/general_helper");
+const { sendEmail, isValidCURP } = require("../helpers/general_helper");
 const { verifyTokenWithErrorHandling } = require("../helpers/general_helper");
 const {createOneTimeToken} = require("../helpers/general_helper");
 const {consumeOneTimeToken} = require("../helpers/general_helper");
+const {splitName,isValidEmail,isValidPeriodo}= require("../helpers/general_helper");
 const { upload } = require("../helpers/general_helper");
 const fs = require("fs").promises;
 const path = require("path");
@@ -872,21 +873,44 @@ actions.cargarAlumnos = async (req, res) => {
               }
               const boleta = matricula.toString().trim();
               const nombre = (alumno['MCP'] || alumno['MCH']).toString().trim();
-              const correo = (alumno['CORREO'] || '').toString().trim();
-              const curp = (alumno['CURP'] || '').toString().trim();
-              const generacion = alumno['PROMOCIÓN DE IMP'].toString().trim();
+              const fullname = splitName(nombre);
+
+              if(isValidEmail(alumno['CORREO'] )){
+                const correo = (alumno['CORREO']).toString().trim();
+              }else{
+                errores.push({ alumno, error: "Correo inválido: " + alumno['CORREO'] });
+                continue;
+              }
+              if(isValidCURP(alumno['CURP'] )){
+                const curp = (alumno['CURP'] || '').toString().trim();
+              }else{
+                errores.push({ alumno, error: "CURP inválido: " + alumno['CURP'] });
+                continue;
+              }
+              if(isValidPeriodo(alumno['PROMOCIÓN DE IMP'])){
+                const generacion = alumno['PROMOCIÓN DE IMP'].toString().trim();
+              }else{
+                errores.push({ alumno, error: "Generación inválida: " + alumno['PROMOCIÓN DE IMP'] });
+                continue;
+              }
               const carrera = (alumno['CARRERA'] || '').toString().trim();
               const estatus = alumno['ESTATUS'].toString().trim();
               if (carrera === "H-MEDICO CIRUJANO Y HOMEOPATA") {
                 numcarrera = 1;
               } else if (carrera === "P-MEDICO CIRUJANO Y PARTERO") {
                 numcarrera = 2;
+              }else{
+                errores.push({ alumno, error: "Carrera inválida: " + carrera });
+                continue;
               }
               if(estatus === "CANDIDATO"){ {
                 numestatus = 1;
               }} else if (estatus === "ASPIRANTE") {
                 numestatus = 2;
+              }else{
+                errores.push({ alumno, error: "Estatus inválido: " + estatus });
               }
+
               if(await prisma.Persona.findUnique({ where: { boleta: boleta }}) != undefined){
                 errores.push({ alumno, error: "La boleta ya está registrada: " + boleta });
                 continue;
@@ -897,6 +921,8 @@ actions.cargarAlumnos = async (req, res) => {
                   correo: correo,
                   curp: curp,
                   nombre: nombre,
+                  APELLIDO_PATERNO: fullname.apellido_paterno,
+                  APELLIDO_MATERNO: fullname.apellido_materno,
                   rol: "ALUMNO"
                 }
               });
