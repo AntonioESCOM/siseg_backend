@@ -1047,8 +1047,14 @@ actions.agregarAdmin = async (req, res) => {
     if (tk,apellido_materno,apellido_paterno,curp,correo,nombre,numempleado,perfil) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       if(await prisma.Persona.findUnique({ where: { boleta: numempleado }}) != undefined){
-        return res.json({ error: 1, message: "El número de empleado ya está registrado" });
+        return res.json({ error: 1, message: "Número de empleado duplicado:" + numempleado });
       } 
+      if(await prisma.Persona.findUnique({ where: { correo: correo }}) != undefined){
+        return res.json({ error: 1, message: "Correo duplicado:" + correo });
+      }
+      if(await prisma.Persona.findUnique({ where: { curp: curp }}) != undefined){
+        return res.json({ error: 1, message: "CURP duplicado:" + curp });
+      }
         const randomPassword = Math.random().toString(36).slice(-8);
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
         const user = await prisma.Persona.create({
