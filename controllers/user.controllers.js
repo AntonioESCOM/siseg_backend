@@ -796,7 +796,13 @@ actions.agregarAlumno = async (req, res) => {
     if (tk,apellido_materno,apellido_paterno,boleta,carrera,correo,curp,estatus,generacion,nombre,promedio) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       if(await prisma.Persona.findUnique({ where: { boleta: boleta }}) != undefined){
-        return res.json({ error: 1, message: "La boleta ya está registrada" });
+        return res.json({ error: 1, message: "Boleta duplicada:"+ boleta });
+      }
+      if(await prisma.Persona.findUnique({ where: { correo: correo }}) != undefined){
+        return res.json({ error: 1, message: "Correo duplicado:"+ correo });
+      }
+      if(await prisma.Persona.findUnique({ where: { curp: curp }}) != undefined){
+        return res.json({ error: 1, message: "CURP duplicado:"+ curp });
       }
       const user = await prisma.Persona.create({
         data: {
@@ -868,7 +874,7 @@ actions.cargarAlumnos = async (req, res) => {
               }
               const matricula = alumno['10o'];
               if (!matricula || typeof matricula !== 'number' || matricula.toString().length < 10) {
-                  errores.push({ alumno, error: "Matrícula inválida: " + matricula });
+                  errores.push({ alumno, error: "Boleta inválida: " + matricula });
                   continue;
               }
               const boleta = matricula.toString().trim();
@@ -912,9 +918,19 @@ actions.cargarAlumnos = async (req, res) => {
               }
 
               if(await prisma.Persona.findUnique({ where: { boleta: boleta }}) != undefined){
-                errores.push({ alumno, error: "La boleta ya está registrada: " + boleta });
+                errores.push({ alumno, error: "Boleta duplicada: " + boleta });
                 continue;
               }
+
+              if(await prisma.Persona.findUnique({ where: { correo: correo }}) != undefined){
+                errores.push({ alumno, error: "Correo duplicado: " + correo });
+                continue;
+              }
+              if(await prisma.Persona.findUnique({ where: { curp: curp }}) != undefined){
+                errores.push({ alumno, error: "CURP duplicado: " + curp });
+                continue;
+              }
+
               const user = await prisma.Persona.create({
                 data: {
                   boleta: boleta,
