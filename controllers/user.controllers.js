@@ -95,11 +95,7 @@ actions.verificarCandidato = async (req, res) => {
   try {
     const user = await prisma.Persona.findUnique({ where: { correo } });
     if (user) {
-      const token = jwt.sign(
-        { id: user.boleta, username: user.nombre },
-        process.env.SECRET_KEY,
-        { expiresIn: "1h" }
-      );
+      const token = createOneTimeToken({ id: user.boleta, username: user.nombre});
       const verifyUrl = process.env.FRONT_END_URL + `/completar-registro?tk=${token}`;
       let emailContent = await fs.readFile(
         "./templates/confirmAccount.html",
@@ -272,8 +268,8 @@ actions.restablecerPasswordLogin = async (req, res) => {
 actions.getValidarDatos = async (req, res) => {
   const { tk } = req.query;
   try {
-     const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
     if (tk) {
+      const payload = consumeOneTimeToken(tk);
       const user = await prisma.Persona.findUnique({
         where: { boleta: payload.id },
         include: { alumno: true },
