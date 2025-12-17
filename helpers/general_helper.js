@@ -116,13 +116,6 @@ function consumeOneTimeToken(token) {
     if (!tokenStore.has(token)) return null;
 
     const record = tokenStore.get(token);
-    
-    // Validar expiración (por si el Garbage Collector no ha pasado aún)
-    if (Date.now() > record.expires) {
-        tokenStore.delete(token);
-        return null;
-    }
-
     // BORRAR EL TOKEN (Aquí ocurre la magia de un solo uso)
     tokenStore.delete(token);
     
