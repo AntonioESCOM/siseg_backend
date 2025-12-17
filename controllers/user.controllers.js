@@ -229,10 +229,50 @@ actions.restablecerPassword = async (req, res) => {
   }
 };
 
+actions.restablecerPasswordLogin = async (req, res) => {
+  const { password, tk } = req.body;
+  try {
+    if (tk) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const persona = await prisma.Persona.update({
+        where: { boleta: payload.id },
+        data: { contrasena: hashedPassword },
+      });
+      if (persona.rol == "ALUMNO") {
+        console.log("alumno");
+        await prisma.Alumno.update({
+          where: { boleta: payload.id },
+          data: { estatus: 1 },
+        });
+      }else {
+        console.log("admin");
+        await prisma.PAdmin.update({
+          where: { boleta: payload.id },
+          data: { estatus: 1 },
+        });
+      }
+      res.json({ error: 0, message: "Se ha restablecido la contraseña" });
+    } else {
+      res.json({ error: 1, message: "Token requerido" });
+    }
+  } catch (error) {
+    console.log(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
+  }
+};
+
 actions.getValidarDatos = async (req, res) => {
   const { tk } = req.query;
   try {
-    const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+     const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
     if (tk) {
       const user = await prisma.Persona.findUnique({
         where: { boleta: payload.id },
