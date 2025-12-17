@@ -228,8 +228,8 @@ actions.restablecerPassword = async (req, res) => {
 actions.getValidarDatos = async (req, res) => {
   const { tk } = req.query;
   try {
-    const payload = consumeOneTimeToken(tk);
-    if (tk && payload) {
+    let payload = consumeOneTimeToken(tk);
+    if (tk) {
       const user = await prisma.Persona.findUnique({
         where: { boleta: payload.id },
         include: { alumno: true },
