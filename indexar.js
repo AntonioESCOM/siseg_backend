@@ -1,4 +1,5 @@
 // indexar-api.js
+require('dotenv').config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { Pinecone } = require("@pinecone-database/pinecone");
 const fs = require("fs");
@@ -10,7 +11,7 @@ const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
 const PINECONE_HOST_URL = process.env.PINECONE_HOST_URL; 
 const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME; 
 
-const PDF_PATH = path.resolve('./uploads/infogeneralserviciosocialenmh.pdf');
+const PDF_PATH = path.resolve('./uploads/convocatoriafeb26-ene27.pdf');
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const pinecone = new Pinecone({ apiKey: PINECONE_API_KEY });
 const index = pinecone.index(PINECONE_INDEX_NAME);

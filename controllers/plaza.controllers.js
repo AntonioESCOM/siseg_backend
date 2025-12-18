@@ -80,10 +80,13 @@ actions.eliminarPlaza = async (req, res) => {
       try {
         if(tk){
             const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);           
-            const plazaEliminada = await prisma.Plaza.delete({
+            const plazaEliminada = await prisma.Plaza.update({
                 where: {  
                     ID: parseInt(idPlaza)
                 },
+                data: {
+                    estatus: 0
+                }
               }); 
                 if (plazaEliminada) {
                     res.json({ error: 0, message: "Plaza eliminada", plazaEliminada });
