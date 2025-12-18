@@ -7,7 +7,7 @@ router.post('/verificarCandidato', actionsUser.verificarCandidato);
 router.get('/confirmarCandidato', actionsUser.confirmarCandidato);
 router.post('/restablecerPasswordEmail', actionsUser.restablecerPasswordEmail);
 router.post('/restablecerPassword', actionsUser.restablecerPassword );
-router.post('/restablecerPasswordLogin', actionsUser.cambiarPasswordLogin);
+router.post('/restablecerPasswordLogin', actionsUser.restablecerPasswordLogin);
 router.get('/getValidarDatos', actionsUser.getValidarDatos);
 router.post('/completarRegistro', actionsUser.completarRegistro);
 router.post('/modificarDatos', actionsUser.modificarDatos);

@@ -650,21 +650,8 @@ actions.obtenerPlazaAsignada = async (req, res) => {
       const alumno = await prisma.Alumno.findUnique({
         where: { boleta: payload.id }
       });
-      if(alumno.sede == null || alumno.sede == undefined){ 
-          plaza = {
-            ID: 0,
-            PROGRAMA: "",
-            carrera: "",
-            estatus: "",
-            promocion: "",
-            sede: "",
-            tarjetaDisponible: "",
-            tipoBeca: "",
-            ubicacion: ""
-      };
-      if (alumno ) {
-        const plaza = await prisma.Plaza.findUnique({where: { ID: alumno.sede }});
-        if(!plaza){ 
+      if (alumno) {
+        if(alumno.sede === null){ 
           plaza = {
             ID: 0,
             PROGRAMA: "",
@@ -676,7 +663,9 @@ actions.obtenerPlazaAsignada = async (req, res) => {
             tipoBeca: "",
             ubicacion: ""
           };
+        
         } else {
+          const plaza = await prisma.Plaza.findUnique({where: { ID: alumno.sede }});
           res.json({ error: 0, message: "Datos", plaza });
         }
       } else {
