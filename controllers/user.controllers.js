@@ -401,7 +401,7 @@ actions.modificarDatos = async (req, res) => {
   } = req.body;
   try {
     if (
-      (calle, colonia, delegacion, estado, cp, sexo, telcelular, tellocal, tk)
+      ( sexo, telcelular, tellocal, tk)
     ) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       const persona = await prisma.Persona.update({
