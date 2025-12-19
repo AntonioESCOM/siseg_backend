@@ -442,8 +442,7 @@ actions.modificarDatosAdmin = async (req, res) => {
     tk
   } = req.body;
   try {
-    if (
-      ( sexo && telcelular && tellocal && tk)) {
+    if ( sexo && telcelular && tellocal && tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       await prisma.Persona.update({
         where: { boleta: payload.id },
@@ -1001,9 +1000,9 @@ actions.cargarAlumnos = async (req, res) => {
                 continue;
               }
               if(estatus === "CANDIDATO"){ {
-                numestatus = 1;
+                numestatus = 0;
               }} else if (estatus === "ASPIRANTE") {
-                numestatus = 2;
+                numestatus = 1;
               }else{
                 errores.push({ alumno, error: "Estatus inválido: " + estatus });
               }
