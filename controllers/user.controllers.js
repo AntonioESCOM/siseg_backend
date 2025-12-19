@@ -9,7 +9,7 @@ const {createOneTimeToken} = require("../helpers/general_helper");
 const {consumeOneTimeToken} = require("../helpers/general_helper");
 const {splitName,isValidEmail,isValidPeriodo}= require("../helpers/general_helper");
 const { upload } = require("../helpers/general_helper");
-const fs = require("fs").promises;
+const fs = require("fs");
 const path = require("path");
 const xlsx = require('xlsx');
 const { url } = require("inspector");
@@ -472,12 +472,11 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
       let config = { header: "", footer: "" }; // Valores por defecto
-      try {
-        const configRaw = fs.readFileSync(path.join(__dirname, '../config.json'), 'utf8');
-        config = JSON.parse(configRaw);
-      } catch (err) {
-        console.log("No se pudo leer config.json, usando valores vacíos");
-      }
+      console.log("Leyendo configuración desde", path.join(__dirname, '../config.json'));
+
+      const configRaw = fs.readFileSync(path.join(__dirname, '../config.json'), 'utf8');
+      console.log("Contenido del archivo de configuración:", configRaw);
+      config = JSON.parse(configRaw);
       const user = await prisma.Persona.findUnique({
         where: { boleta: payload.id },
         include: { alumno: true },
@@ -508,8 +507,8 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
         sexo: user?.sexo || "",
         telcelular: user?.telefonoMovil || "",
         tellocal: user?.telefonoFijo || "",
-        header: config.header , 
-        footer: config.footer 
+        header: config?.header || "",
+        footer: config?.footer || "" 
       };
         res.json({ error: 0, message: "Datos", data });
       } else {
@@ -1379,6 +1378,30 @@ actions.obtenerDetallesAlumnoPorBoleta = async (req, res) => {
     console.log(error);
     res.json({ error: 1, message: "Token expirado" });
   }
+};
+
+actions.actualizarConfiguracion = async (req, res) => {
+    const { header, footer } = req.query;
+    const configPath = path.join(__dirname, '../config.json');
+
+    try {
+        let configActual = { header: "", footer: "" };  
+        if (fs.existsSync(configPath)) {
+            const data = fs.readFileSync(configPath, 'utf8');
+            configActual = JSON.parse(data);
+        }
+        if (header !== undefined) configActual.header = header;
+        if (footer !== undefined) configActual.footer = footer;
+        fs.writeFileSync(configPath, JSON.stringify(configActual, null, 2));
+
+        res.json({
+            error: 0,
+            message: "Configuración actualizada con éxito",
+            config: configActual
+        });
+    } catch (error) {
+        res.status(500).json({ error: 1, message: "Error interno del servidor" });
+    }
 };
 
 module.exports = actions;
