@@ -341,7 +341,7 @@ actions.completarRegistro = async (req, res) => {
       });
       await prisma.Alumno.update({
         where: { boleta: payload.id },
-        data: { rfc: rfc },
+        data: { rfc: rfc, estatus: 1 },
       });
       if (
         !(await prisma.Direccion.findUnique({
