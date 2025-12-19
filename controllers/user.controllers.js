@@ -10,6 +10,7 @@ const {consumeOneTimeToken} = require("../helpers/general_helper");
 const {splitName,isValidEmail,isValidPeriodo}= require("../helpers/general_helper");
 const { upload } = require("../helpers/general_helper");
 const fs = require("fs").promises;
+const fs2 = require("fs");
 const path = require("path");
 const xlsx = require('xlsx');
 const { url } = require("inspector");
@@ -474,7 +475,7 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
       let config = { header: "", footer: "" }; // Valores por defecto
       console.log("Leyendo configuración desde", path.join(__dirname, '../config.json'));
 
-      const configRaw = fs.readFileSync(path.join(__dirname, '../config.json'), 'utf8');
+      const configRaw = fs2.readFileSync(path.join(__dirname, '../config.json'), 'utf8');
       console.log("Contenido del archivo de configuración:", configRaw);
       config = JSON.parse(configRaw);
       const user = await prisma.Persona.findUnique({
