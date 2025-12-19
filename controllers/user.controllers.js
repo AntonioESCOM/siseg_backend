@@ -401,26 +401,55 @@ actions.modificarDatos = async (req, res) => {
   } = req.body;
   try {
     if (
-      ( sexo, telcelular, tellocal, tk)
+      (calle && colonia && delegacion && estado && cp && sexo && telcelular && tellocal && tk)
     ) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
-      const persona = await prisma.Persona.update({
+      await prisma.Persona.update({
         where: { boleta: payload.id },
         data: { sexo: sexo, telefonoMovil: telcelular, telefonoFijo: tellocal },
       });
-      if(persona.rol == "ALUMNO"){
-        await prisma.Direccion.update({
-          where: { alumnoBoleta: payload.id },
-          data: {
-            calle: calle,
-            colonia: colonia,
-            delegacionMunicipio: delegacion,
-            cp: cp,
-            estado: estado,
-          },
-        });
-      }
-      res.json({ error: 0, message: "Se ha completado el registro" });
+      await prisma.Direccion.update({
+        where: { alumnoBoleta: payload.id },
+        data: {
+          calle: calle,
+          colonia: colonia,
+          delegacionMunicipio: delegacion,
+          cp: cp,
+          estado: estado,
+        },
+      });
+      res.json({ error: 0, message: "Se ha actualizado correctamente" });
+    } else {
+      res.json({ error: 1, message: "Faltan parametros en la petición" });
+    }
+  } catch (error) {
+    console.log(error);
+    if (error.message === "TOKEN_EXPIRED") {
+      return res.json({ error: 1, message: "Token expirado" });
+    } else if (error.message === "INVALID_TOKEN") {
+      return res.json({ error: 1, message: "Token inválido" });
+    } else {
+      return res.json({ error: 1, message: "Error al confirmar usuario" });
+    }
+  }
+};
+
+actions.modificarDatosAdmin = async (req, res) => {
+  const {
+    sexo,
+    telcelular,
+    tellocal,
+    tk
+  } = req.body;
+  try {
+    if (
+      ( sexo && telcelular && tellocal && tk)) {
+      const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      await prisma.Persona.update({
+        where: { boleta: payload.id },
+        data: { sexo: sexo, telefonoMovil: telcelular, telefonoFijo: tellocal },
+      });
+      res.json({ error: 0, message: "Se ha actualizado correctamente" });
     } else {
       res.json({ error: 1, message: "Faltan parametros en la petición" });
     }

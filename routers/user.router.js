@@ -11,6 +11,7 @@ router.post('/restablecerPasswordLogin', actionsUser.restablecerPasswordLogin);
 router.get('/getValidarDatos', actionsUser.getValidarDatos);
 router.post('/completarRegistro', actionsUser.completarRegistro);
 router.post('/modificarDatos', actionsUser.modificarDatos);
+router.post('/modificarDatosAdmin', actionsUser.modificarDatosAdmin);
 router.get('/obtenerTodosDatosAlumno', actionsUser.obtenerTodosDatosAlumno);
 router.get('/expedienteDigital', actionsUser.expedienteDigital);
 router.post('/subirArchivo',actionsUser.subirArchivo);
