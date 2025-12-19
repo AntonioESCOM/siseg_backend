@@ -20,10 +20,8 @@ actions.loginUser = async (req, res) => {
 
   try {
     const user = await prisma.Persona.findUnique({ where: { boleta } });
-    const admin = await prisma.PAdmin.findUnique({ where: { boleta } });
-    const alumno = await prisma.Alumno.findUnique({ where: { boleta } });
     const ok = await bcrypt.compare(password, user.contrasena);
-    if (user && ok && (alumno.estatus != 0 || admin.estatus != 0)) {
+    if (user && ok) {
       let token;
       if(user.rol == "ALUMNO"){
         const alumnoProfile = await prisma.Alumno.findUnique({ where: { boleta: user.boleta } });
