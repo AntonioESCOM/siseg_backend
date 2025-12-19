@@ -404,20 +404,22 @@ actions.modificarDatos = async (req, res) => {
       (calle, colonia, delegacion, estado, cp, sexo, telcelular, tellocal, tk)
     ) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
-      await prisma.Persona.update({
+      const persona = await prisma.Persona.update({
         where: { boleta: payload.id },
         data: { sexo: sexo, telefonoMovil: telcelular, telefonoFijo: tellocal },
       });
-      await prisma.Direccion.update({
-        where: { alumnoBoleta: payload.id },
-        data: {
-          calle: calle,
-          colonia: colonia,
-          delegacionMunicipio: delegacion,
-          cp: cp,
-          estado: estado,
-        },
-      });
+      if(persona.rol == "ALUMNO"){
+        await prisma.Direccion.update({
+          where: { alumnoBoleta: payload.id },
+          data: {
+            calle: calle,
+            colonia: colonia,
+            delegacionMunicipio: delegacion,
+            cp: cp,
+            estado: estado,
+          },
+        });
+      }
       res.json({ error: 0, message: "Se ha completado el registro" });
     } else {
       res.json({ error: 1, message: "Faltan parametros en la petición" });
