@@ -12,6 +12,8 @@ const { upload } = require("../helpers/general_helper");
 const fs = require("fs").promises;
 const path = require("path");
 const xlsx = require('xlsx');
+const { url } = require("inspector");
+const CONFIG_FILE = './config.json';
 
 const actions = {};
 
@@ -469,6 +471,13 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
   try {
     if (tk) {
       const payload = verifyTokenWithErrorHandling(tk, process.env.SECRET_KEY);
+      let config = { header: "", footer: "" }; // Valores por defecto
+      try {
+        const configRaw = fs.readFileSync(path.join(__dirname, '../config.json'), 'utf8');
+        config = JSON.parse(configRaw);
+      } catch (err) {
+        console.log("No se pudo leer config.json, usando valores vacíos");
+      }
       const user = await prisma.Persona.findUnique({
         where: { boleta: payload.id },
         include: { alumno: true },
@@ -499,6 +508,8 @@ actions.obtenerTodosDatosAlumno = async (req, res) => {
         sexo: user?.sexo || "",
         telcelular: user?.telefonoMovil || "",
         tellocal: user?.telefonoFijo || "",
+        header: config.header , 
+        footer: config.footer 
       };
         res.json({ error: 0, message: "Datos", data });
       } else {
